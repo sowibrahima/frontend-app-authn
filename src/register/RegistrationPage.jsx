@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, {
+  useEffect, useMemo, useState,
+} from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { getConfig } from '@edx/frontend-platform';
 import { sendPageEvent, sendTrackEvent } from '@edx/frontend-platform/analytics';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { Form, Spinner, StatefulButton } from '@openedx/paragon';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import { Helmet } from 'react-helmet';
@@ -11,11 +13,18 @@ import Skeleton from 'react-loading-skeleton';
 
 import ConfigurableRegistrationForm from './components/ConfigurableRegistrationForm';
 import RegistrationFailure from './components/RegistrationFailure';
-import { useRegistration } from './data/apiHook';
+import {
+  backupRegistrationFormBegin,
+  clearRegistrationBackendError,
+  registerNewUser,
+  setEmailSuggestionInStore,
+  setUserPipelineDataLoaded,
+} from './data/actions';
 import {
   FORM_SUBMISSION_ERROR,
   TPA_AUTHENTICATION_FAILURE,
 } from './data/constants';
+import getBackendValidations from './data/selectors';
 import {
   isFormValid, prepareRegistrationPayload,
 } from './data/utils';
@@ -27,54 +36,23 @@ import {
   RedirectLogistration,
   ThirdPartyAuthAlert,
 } from '../common-components';
-import { useThirdPartyAuthContext } from '../common-components/components/ThirdPartyAuthContext';
-import { useThirdPartyAuthHook } from '../common-components/data/apiHook';
+import { getThirdPartyAuthContext as getRegistrationDataFromBackend } from '../common-components/data/actions';
 import EnterpriseSSO from '../common-components/EnterpriseSSO';
 import ThirdPartyAuth from '../common-components/ThirdPartyAuth';
 import {
-  COMPLETE_STATE, DEFAULT_STATE, PENDING_STATE, REGISTER_PAGE,
+  COMPLETE_STATE, PENDING_STATE, REGISTER_PAGE,
 } from '../data/constants';
 import {
   getAllPossibleQueryParams, getTpaHint, getTpaProvider, isHostAvailableInQueryParams, setCookie,
 } from '../data/utils';
-import { useRegisterContext } from './components/RegisterContext';
+
 /**
- * Inner Registration Page component that uses the context
+ * Main Registration Page component
  */
 const RegistrationPage = (props) => {
+  const [currentStep, setCurrentStep] = useState(1);
   const { formatMessage } = useIntl();
-  const {
-    fieldDescriptions,
-    optionalFields,
-    thirdPartyAuthApiStatus,
-    thirdPartyAuthContext,
-    setThirdPartyAuthContextBegin,
-    setThirdPartyAuthContextSuccess,
-    setThirdPartyAuthContextFailure,
-  } = useThirdPartyAuthContext();
-
-  const {
-    autoSubmitRegForm,
-    currentProvider,
-    finishAuthUrl,
-    pipelineUserDetails,
-    providers,
-    secondaryProviders,
-    errorMessage: thirdPartyAuthErrorMessage,
-  } = thirdPartyAuthContext;
-
-  const {
-    clearRegistrationBackendError,
-    registrationFormData,
-    registrationResult,
-    registrationError,
-    setEmailSuggestionContext,
-    updateRegistrationFormData,
-    setRegistrationError,
-    setRegistrationResult,
-    backendValidations,
-    setBackendCountryCode,
-  } = useRegisterContext();
+  const dispatch = useDispatch();
 
   const registrationEmbedded = isHostAvailableInQueryParams();
   const platformName = getConfig().SITE_NAME;
@@ -88,24 +66,30 @@ const RegistrationPage = (props) => {
     handleInstitutionLogin,
     institutionLogin,
   } = props;
-  const backendRegistrationError = registrationError;
-  const registrationMutation = useRegistration({
-    onSuccess: (data) => {
-      setRegistrationResult(data);
-      setRegistrationError({});
-    },
-    onError: (errorData) => {
-      setRegistrationError(errorData);
-    },
-  });
 
-  const [userPipelineDataLoaded, setUserPipelineDataLoaded] = useState(false);
-  const registrationErrorCode = registrationError?.errorCode || backendRegistrationError?.errorCode;
-  const submitState = registrationMutation.isPending ? PENDING_STATE : DEFAULT_STATE;
+  const backedUpFormData = useSelector(state => state.register.registrationFormData);
+  const registrationError = useSelector(state => state.register.registrationError);
+  const registrationErrorCode = registrationError?.errorCode;
+  const registrationResult = useSelector(state => state.register.registrationResult);
+  const shouldBackupState = useSelector(state => state.register.shouldBackupState);
+  const userPipelineDataLoaded = useSelector(state => state.register.userPipelineDataLoaded);
+  const submitState = useSelector(state => state.register.submitState);
+
+  const fieldDescriptions = useSelector(state => state.commonComponents.fieldDescriptions);
+  const optionalFields = useSelector(state => state.commonComponents.optionalFields);
+  const thirdPartyAuthApiStatus = useSelector(state => state.commonComponents.thirdPartyAuthApiStatus);
+  const autoSubmitRegForm = useSelector(state => state.commonComponents.thirdPartyAuthContext.autoSubmitRegForm);
+  const thirdPartyAuthErrorMessage = useSelector(state => state.commonComponents.thirdPartyAuthContext.errorMessage);
+  const finishAuthUrl = useSelector(state => state.commonComponents.thirdPartyAuthContext.finishAuthUrl);
+  const currentProvider = useSelector(state => state.commonComponents.thirdPartyAuthContext.currentProvider);
+  const providers = useSelector(state => state.commonComponents.thirdPartyAuthContext.providers);
+  const secondaryProviders = useSelector(state => state.commonComponents.thirdPartyAuthContext.secondaryProviders);
+  const pipelineUserDetails = useSelector(state => state.commonComponents.thirdPartyAuthContext.pipelineUserDetails);
+
+  const backendValidations = useSelector(getBackendValidations);
   const queryParams = useMemo(() => getAllPossibleQueryParams(), []);
   const tpaHint = useMemo(() => getTpaHint(), []);
-  // Initialize form state from local backedUpFormData
-  const backedUpFormData = registrationFormData;
+
   const [formFields, setFormFields] = useState({ ...backedUpFormData.formFields });
   const [configurableFormFields, setConfigurableFormFields] = useState({ ...backedUpFormData.configurableFormFields });
   const [errors, setErrors] = useState({ ...backedUpFormData.errors });
@@ -113,6 +97,7 @@ const RegistrationPage = (props) => {
   const [formStartTime, setFormStartTime] = useState(null);
   // temporary error state for embedded experience because we don't want to show errors on blur
   const [temporaryErrors, setTemporaryErrors] = useState({ ...backedUpFormData.errors });
+
   const { cta, host } = queryParams;
   const buttonLabel = cta
     ? formatMessage(messages['create.account.cta.button'], { label: cta })
@@ -131,46 +116,42 @@ const RegistrationPage = (props) => {
         setFormFields(prevState => ({
           ...prevState, name, username, email,
         }));
-        setUserPipelineDataLoaded(true);
+        dispatch(setUserPipelineDataLoaded(true));
       }
     }
-  }, [
+  }, [ // eslint-disable-line react-hooks/exhaustive-deps
     thirdPartyAuthApiStatus,
     thirdPartyAuthErrorMessage,
     pipelineUserDetails,
     userPipelineDataLoaded,
   ]);
 
-  const params = { ...queryParams, is_register_page: true };
-  if (tpaHint) {
-    params.tpa_hint = tpaHint;
-  }
-  const { data, isSuccess, error } = useThirdPartyAuthHook(REGISTER_PAGE, params);
   useEffect(() => {
     if (!formStartTime) {
       sendPageEvent('login_and_registration', 'register');
-      setThirdPartyAuthContextBegin();
+      const payload = { ...queryParams, is_register_page: true };
+      if (tpaHint) {
+        payload.tpa_hint = tpaHint;
+      }
+      dispatch(getRegistrationDataFromBackend(payload));
       setFormStartTime(Date.now());
     }
-    if (formStartTime) {
-      if (isSuccess && data) {
-        setThirdPartyAuthContextSuccess(
-          data.fieldDescriptions,
-          data.optionalFields,
-          data.thirdPartyAuthContext,
-        );
-        setBackendCountryCode(data.thirdPartyAuthContext.countryCode);
-      }
+  }, [dispatch, formStartTime, queryParams, tpaHint]);
 
-      if (error) {
-        setThirdPartyAuthContextFailure();
-      }
+  /**
+   * Backup the registration form in redux when register page is toggled.
+   */
+  useEffect(() => {
+    if (shouldBackupState) {
+      dispatch(backupRegistrationFormBegin({
+        ...backedUpFormData,
+        configurableFormFields: { ...configurableFormFields },
+        formFields: { ...formFields },
+        errors: { ...errors },
+      }));
     }
-  }, [formStartTime, isSuccess, data, error,
-    setThirdPartyAuthContextBegin, setThirdPartyAuthContextSuccess,
-    setBackendCountryCode, setThirdPartyAuthContextFailure]);
+  }, [shouldBackupState, configurableFormFields, formFields, errors, dispatch, backedUpFormData]);
 
-  // Handle backend validation errors from context
   useEffect(() => {
     if (backendValidations) {
       if (registrationEmbedded) {
@@ -191,6 +172,7 @@ const RegistrationPage = (props) => {
     if (registrationResult.success) {
       // This event is used by GTM
       sendTrackEvent('edx.bi.user.account.registered.client', {});
+
       // This is used by the "User Retention Rate Event" on GTM
       setCookie(getConfig().USER_RETENTION_COOKIE_NAME, true);
     }
@@ -199,41 +181,29 @@ const RegistrationPage = (props) => {
   const handleOnChange = (event) => {
     const { name } = event.target;
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-    if (backendRegistrationError[name]) {
-      clearRegistrationBackendError(name);
-    }
-    // Clear context registration errors
-    if (registrationError.errorCode) {
-      setRegistrationError({});
+    if (registrationError[name]) {
+      dispatch(clearRegistrationBackendError(name));
     }
     setErrors(prevErrors => ({ ...prevErrors, [name]: '' }));
-    // Update local state
-    const newFormFields = { ...formFields, [name]: value };
-    setFormFields(newFormFields);
-    // Save to context for persistence across tab switches
-    updateRegistrationFormData({
-      formFields: newFormFields,
-      errors,
-      configurableFormFields,
-    });
+    setFormFields(prevState => ({ ...prevState, [name]: value }));
   };
 
-  const handleErrorChange = (fieldName, errorMessage) => {
+  const handleErrorChange = (fieldName, error) => {
     if (registrationEmbedded) {
       setTemporaryErrors(prevErrors => ({
         ...prevErrors,
-        [fieldName]: errorMessage,
+        [fieldName]: error,
       }));
-      if (errorMessage === '' && errors[fieldName] !== '') {
+      if (error === '' && errors[fieldName] !== '') {
         setErrors(prevErrors => ({
           ...prevErrors,
-          [fieldName]: errorMessage,
+          [fieldName]: error,
         }));
       }
     } else {
       setErrors(prevErrors => ({
         ...prevErrors,
-        [fieldName]: errorMessage,
+        [fieldName]: error,
       }));
     }
   };
@@ -249,6 +219,7 @@ const RegistrationPage = (props) => {
     if (flags.autoGeneratedUsernameEnabled) {
       delete payload.username;
     }
+
     // Validating form data before submitting
     const { isValid, fieldErrors, emailSuggestion } = isFormValid(
       payload,
@@ -258,12 +229,7 @@ const RegistrationPage = (props) => {
       formatMessage,
     );
     setErrors({ ...fieldErrors });
-    updateRegistrationFormData({
-      formFields,
-      errors: fieldErrors,
-      configurableFormFields,
-    });
-    setEmailSuggestionContext(emailSuggestion.suggestion, emailSuggestion.type);
+    dispatch(setEmailSuggestionInStore(emailSuggestion));
 
     // returning if not valid
     if (!isValid) {
@@ -271,14 +237,64 @@ const RegistrationPage = (props) => {
       return;
     }
 
+    // Preparing payload for submission
     payload = prepareRegistrationPayload(
       payload,
       configurableFormFields,
       flags.showMarketingEmailOptInCheckbox,
       totalRegistrationTime,
       queryParams);
-    // making register call with React Query
-    registrationMutation.mutate(payload);
+
+    // making register call
+    dispatch(registerNewUser(payload));
+  };
+
+  const handleNextStep = (e) => {
+    e.preventDefault();
+
+    // Core fields validation for Step 1
+    const step1Payload = { ...formFields };
+    if (flags.autoGeneratedUsernameEnabled) {
+      delete step1Payload.username;
+    }
+    if (currentProvider) {
+      delete step1Payload.password;
+    }
+
+    // Dummy empty extra fields so it doesn't fail full validation prematurely
+    const dummyConfigurable = {};
+    if (configurableFormFields) {
+      Object.keys(configurableFormFields).forEach(key => {
+        dummyConfigurable[key] = configurableFormFields[key];
+      });
+    }
+
+    const { isValid, fieldErrors } = isFormValid(
+      step1Payload,
+      registrationEmbedded ? temporaryErrors : errors,
+      dummyConfigurable,
+      fieldDescriptions,
+      formatMessage,
+    );
+
+    // If core fields have errors, block progression
+    // We only care about step 1 errors here
+    const coreErrors = {
+      name: fieldErrors.name,
+      email: fieldErrors.email,
+      username: fieldErrors.username,
+      password: fieldErrors.password,
+    };
+
+    const hasCoreErrors = !!coreErrors.name || !!coreErrors.email || !!coreErrors.username || !!coreErrors.password;
+
+    setErrors(prev => ({ ...prev, ...coreErrors }));
+
+    if (hasCoreErrors) {
+      return;
+    }
+
+    setCurrentStep(2);
   };
 
   const handleSubmit = (e) => {
@@ -302,7 +318,7 @@ const RegistrationPage = (props) => {
       );
     }
     return (
-      <>
+      <div className="w-full flex flex-col items-center py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans">
         <Helmet>
           <title>{formatMessage(messages['register.page.title'], { siteName: getConfig().SITE_NAME })}</title>
         </Helmet>
@@ -318,106 +334,174 @@ const RegistrationPage = (props) => {
             getConfig().ENABLE_PROGRESSIVE_PROFILING_ON_AUTHN && !!Object.keys(optionalFields.fields).length
           }
         />
+
+
+
         {autoSubmitRegForm && !errorCode.type ? (
-          <div className="mw-xs mt-5 text-center">
-            <Spinner animation="border" variant="primary" id="tpa-spinner" />
+          <div className="flex flex-col items-center justify-center min-h-[400px]">
+            <svg className="animate-spin h-10 w-10 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <p className="mt-4 text-neutral-500 font-medium tracking-wide animate-pulse">Configuration du compte...</p>
           </div>
         ) : (
           <div
             className={classNames(
-              'mw-xs mt-3',
-              { 'w-100 m-auto pt-4 main-content': registrationEmbedded },
+              'relative z-10 w-full',
+              { 'auth-card max-w-[500px] mx-auto': !registrationEmbedded },
+              { 'max-w-md mx-auto pt-4': registrationEmbedded },
             )}
           >
-            <ThirdPartyAuthAlert
-              currentProvider={currentProvider}
-              platformName={platformName}
-              referrer={REGISTER_PAGE}
-            />
-            <RegistrationFailure
-              errorCode={errorCode.type}
-              failureCount={errorCode.count}
-              context={{ provider: currentProvider, errorMessage: thirdPartyAuthErrorMessage }}
-            />
-            <Form id="registration-form" name="registration-form">
-              <NameField
-                name="name"
-                value={formFields.name}
-                shouldFetchUsernameSuggestions={!formFields.username.trim()}
-                handleChange={handleOnChange}
-                handleErrorChange={handleErrorChange}
-                errorMessage={errors.name}
-                helpText={[formatMessage(messages['help.text.name'])]}
-                floatingLabel={formatMessage(messages['registration.fullname.label'])}
+            {/* Logo and Header (only if not embedded) */}
+            {!registrationEmbedded && (
+              <div className="flex justify-center mb-4">
+                <a href={getConfig().LMS_BASE_URL} className="flex items-center gap-2 group">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand group-hover:rotate-12 transition-transform duration-500 ease-out"><circle cx="12" cy="8" r="6" /><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" /></svg>
+                  <span className="text-2xl font-bold text-neutral-900 tracking-tight">{getConfig().SITE_NAME}</span>
+                </a>
+              </div>
+            )}
+
+            <div className="mb-4">
+              <ThirdPartyAuthAlert
+                currentProvider={currentProvider}
+                platformName={platformName}
+                referrer={REGISTER_PAGE}
               />
-              <EmailField
-                name="email"
-                value={formFields.email}
-                confirmEmailValue={configurableFormFields?.confirm_email}
-                handleErrorChange={handleErrorChange}
-                handleChange={handleOnChange}
-                errorMessage={errors.email}
-                helpText={[formatMessage(messages['help.text.email'])]}
-                floatingLabel={formatMessage(messages['registration.email.label'])}
+
+              <RegistrationFailure
+                errorCode={errorCode.type}
+                failureCount={errorCode.count}
+                context={{ provider: currentProvider, errorMessage: thirdPartyAuthErrorMessage }}
               />
-              {!flags.autoGeneratedUsernameEnabled && (
-                <UsernameField
-                  name="username"
-                  spellCheck="false"
-                  value={formFields.username}
-                  handleChange={handleOnChange}
-                  handleErrorChange={handleErrorChange}
-                  errorMessage={errors.username}
-                  helpText={[formatMessage(messages['help.text.username.1']), formatMessage(messages['help.text.username.2'])]}
-                  floatingLabel={formatMessage(messages['registration.username.label'])}
-                />
-              )}
-              {!currentProvider && (
-                <PasswordField
-                  name="password"
-                  value={formFields.password}
-                  handleChange={handleOnChange}
-                  handleErrorChange={handleErrorChange}
-                  errorMessage={errors.password}
-                  floatingLabel={formatMessage(messages['registration.password.label'])}
-                />
-              )}
-              <ConfigurableRegistrationForm
-                email={formFields.email}
-                fieldErrors={errors}
-                formFields={configurableFormFields}
-                setFieldErrors={registrationEmbedded ? setTemporaryErrors : setErrors}
-                setFormFields={setConfigurableFormFields}
-                autoSubmitRegisterForm={autoSubmitRegForm}
-                fieldDescriptions={fieldDescriptions}
-              />
-              <StatefulButton
-                id="register-user"
-                name="register-user"
-                type="submit"
-                variant="brand"
-                className="register-button mt-4 mb-4"
-                state={submitState}
-                labels={{
-                  default: buttonLabel,
-                  pending: '',
-                }}
-                onClick={handleSubmit}
-                onMouseDown={(e) => e.preventDefault()}
-              />
+            </div>
+
+            <div className={classNames({ 'wuti-auth-card p-5 sm:p-6': !registrationEmbedded })}>
               {!registrationEmbedded && (
-                <ThirdPartyAuth
-                  currentProvider={currentProvider}
-                  providers={providers}
-                  secondaryProviders={secondaryProviders}
-                  handleInstitutionLogin={handleInstitutionLogin}
-                  thirdPartyAuthApiStatus={thirdPartyAuthApiStatus}
-                />
+                <div className="text-center mb-4">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight mb-1">Create an account</h1>
+                  <p className="text-sm text-neutral-500">
+                    Already have an account?{' '}
+                    <a href={`${getConfig().LMS_BASE_URL}/login`} className="wuti-link">Sign in</a>
+                  </p>
+                </div>
               )}
-            </Form>
+
+              <form id="registration-form" name="registration-form" onSubmit={(e) => { e.preventDefault(); if (currentStep === 1) { handleNextStep(e); } else { handleSubmit(e); } }} className="mt-4">
+
+                {currentStep === 1 && (
+                  <div className="animate-[fadeIn_0.3s_ease-out]">
+                    <NameField
+                      name="name"
+                      value={formFields.name}
+                      shouldFetchUsernameSuggestions={!formFields.username.trim()}
+                      handleChange={handleOnChange}
+                      handleErrorChange={handleErrorChange}
+                      errorMessage={errors.name}
+                      helpText={[formatMessage(messages['help.text.name'])]}
+                      floatingLabel={formatMessage(messages['registration.fullname.label'])}
+                      placeholder="e.g. Jane Doe"
+                    />
+                    <EmailField
+                      name="email"
+                      value={formFields.email}
+                      confirmEmailValue={configurableFormFields?.confirm_email}
+                      handleErrorChange={handleErrorChange}
+                      handleChange={handleOnChange}
+                      errorMessage={errors.email}
+                      helpText={[formatMessage(messages['help.text.email'])]}
+                      floatingLabel={formatMessage(messages['registration.email.label'])}
+                      placeholder="prénom.nom@exemple.com"
+                    />
+                    {!flags.autoGeneratedUsernameEnabled && (
+                      <UsernameField
+                        name="username"
+                        spellCheck="false"
+                        value={formFields.username}
+                        handleChange={handleOnChange}
+                        handleErrorChange={handleErrorChange}
+                        errorMessage={errors.username}
+                        helpText={[formatMessage(messages['help.text.username.1']), formatMessage(messages['help.text.username.2'])]}
+                        floatingLabel={formatMessage(messages['registration.username.label'])}
+                        placeholder="jdoe123"
+                      />
+                    )}
+                    {!currentProvider && (
+                      <PasswordField
+                        name="password"
+                        value={formFields.password}
+                        handleChange={handleOnChange}
+                        handleErrorChange={handleErrorChange}
+                        errorMessage={errors.password}
+                        floatingLabel={formatMessage(messages['registration.password.label'])}
+                        placeholder="••••••••"
+                      />
+                    )}
+                  </div>
+                )}
+
+                {currentStep === 2 && (
+                  <div className="animate-[fadeIn_0.3s_ease-out]">
+                    <div className="mb-6">
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(1)}
+                        className="group flex items-center wuti-link mb-4 text-sm"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 group-hover:-translate-x-1 transition-transform"><path d="m15 18-6-6 6-6" /></svg>
+                        Retour
+                      </button>
+                      <h3 className="text-xl font-bold text-neutral-900">Informations complémentaires</h3>
+                      <p className="text-sm text-neutral-500 mt-1 mb-6">Quelques détails pour finaliser votre inscription.</p>
+                    </div>
+
+                    <ConfigurableRegistrationForm
+                      email={formFields.email}
+                      fieldErrors={errors}
+                      formFields={configurableFormFields}
+                      setFieldErrors={registrationEmbedded ? setTemporaryErrors : setErrors}
+                      setFormFields={setConfigurableFormFields}
+                      autoSubmitRegisterForm={autoSubmitRegForm}
+                      fieldDescriptions={fieldDescriptions}
+                    />
+                  </div>
+                )}
+
+                <button
+                  id="register-user"
+                  name="register-user"
+                  type="submit"
+                  disabled={submitState === 'pending'}
+                  className="wuti-btn-primary w-full mt-4"
+                >
+                  {submitState === 'pending' ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Traitement...
+                    </span>
+                  ) : (currentStep === 1 ? 'Continuer' : buttonLabel)}
+                </button>
+
+                {!registrationEmbedded && currentStep === 1 && (
+                  <div className="mt-6">
+                    <ThirdPartyAuth
+                      currentProvider={currentProvider}
+                      providers={providers}
+                      secondaryProviders={secondaryProviders}
+                      handleInstitutionLogin={handleInstitutionLogin}
+                      thirdPartyAuthApiStatus={thirdPartyAuthApiStatus}
+                    />
+                  </div>
+                )}
+              </form>
+            </div>
           </div>
         )}
-      </>
+      </div>
     );
   };
 
@@ -439,6 +523,7 @@ const RegistrationPage = (props) => {
 
 RegistrationPage.propTypes = {
   institutionLogin: PropTypes.bool,
+  // Actions
   handleInstitutionLogin: PropTypes.func,
 };
 

@@ -47,6 +47,8 @@
     "core-js": "3.43.0",
     "fastest-levenshtein": "1.0.16",
     "form-urlencoded": "6.1.6",
+    "gsap": "^3.14.2",
+    "lucide-react": "^0.575.0",
     "prop-types": "15.8.1",
     "query-string": "7.1.3",
     "react": "^18.3.1",
@@ -64,13 +66,17 @@
     "@edx/browserslist-config": "^1.1.1",
     "@edx/typescript-config": "^1.1.0",
     "@openedx/frontend-build": "^14.6.6",
+    "@tailwindcss/postcss": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
+    "autoprefixer": "^10.4.24",
     "babel-plugin-formatjs": "10.5.41",
     "eslint-plugin-import": "2.32.0",
     "glob": "7.2.3",
     "history": "5.3.0",
     "jest": "30.3.0",
+    "postcss": "^8.5.6",
     "react-test-renderer": "^18.3.1",
+    "tailwindcss": "^4.2.1",
     "ts-jest": "^29.4.0"
   }
 }

@@ -2,10 +2,10 @@ const { createConfig } = require('@openedx/frontend-build');
 const ParagonWebpackPlugin = require('@openedx/frontend-build/lib/plugins/paragon-webpack-plugin/ParagonWebpackPlugin');
 const webpack = require('webpack');
 
-const config = createConfig('webpack-prod');
+const config = createConfig('webpack-dev');
 
 // ---------------------------------------------------------------------------
-// Strip Paragon CSS from the production build.
+// Strip Paragon CSS from the build.
 // See webpack.dev-tutor.config.js for full explanation.
 // ---------------------------------------------------------------------------
 

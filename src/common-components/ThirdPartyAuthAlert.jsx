@@ -1,6 +1,5 @@
 import { getConfig } from '@edx/frontend-platform';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { Alert } from '@openedx/paragon';
 import PropTypes from 'prop-types';
 
 import messages from './messages';
@@ -22,16 +21,21 @@ const ThirdPartyAuthAlert = (props) => {
     return null;
   }
 
+  const isSuccess = referrer === REGISTER_PAGE;
+  const alertStyles = isSuccess
+    ? 'bg-green-50 border-green-200 text-green-800'
+    : 'bg-yellow-50 border-yellow-200 text-yellow-800';
+
   return (
     <>
-      <Alert id="tpa-alert" className={referrer === REGISTER_PAGE ? 'alert-success mt-n2 mb-5' : 'alert-warning mt-n2 mb-5'}>
-        {referrer === REGISTER_PAGE ? (
-          <Alert.Heading>{formatMessage(messages['tpa.alert.heading'])}</Alert.Heading>
+      <div id="tpa-alert" className={`w-full p-4 mb-5 border rounded-xl font-sans text-sm ${alertStyles}`}>
+        {isSuccess ? (
+          <h4 className="font-bold mb-1">{formatMessage(messages['tpa.alert.heading'])}</h4>
         ) : null}
-        <p>{ message }</p>
-      </Alert>
-      {referrer === REGISTER_PAGE ? (
-        <h4 className="mt-4 mb-4">{formatMessage(messages['registration.using.tpa.form.heading'])}</h4>
+        <p>{message}</p>
+      </div>
+      {isSuccess ? (
+        <h4 className="mt-4 mb-4 font-bold text-neutral-900">{formatMessage(messages['registration.using.tpa.form.heading'])}</h4>
       ) : null}
     </>
   );

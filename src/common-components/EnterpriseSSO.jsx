@@ -48,7 +48,7 @@ const EnterpriseSSO = (props) => {
                 {tpaProvider.iconImage ? (
                   <div aria-hidden="true">
                     <img className="btn-tpa__image-icon" src={tpaProvider.iconImage} alt={`icon ${tpaProvider.name}`} />
-                    <span className="pl-2" aria-hidden="true">{ tpaProvider.name }</span>
+                    <span className="pl-2" aria-hidden="true">{tpaProvider.name}</span>
                   </div>
                 )
                   : (
@@ -60,7 +60,7 @@ const EnterpriseSSO = (props) => {
                             <Icon className="h-75" src={Login} />
                           )}
                       </div>
-                      <span className="pl-2" aria-hidden="true">{ tpaProvider.name }</span>
+                      <span className="pl-2" aria-hidden="true">{tpaProvider.name}</span>
                     </>
                   )}
               </Button>

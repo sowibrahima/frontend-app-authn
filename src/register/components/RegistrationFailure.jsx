@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 
 import { getConfig } from '@edx/frontend-platform';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { Alert } from '@openedx/paragon';
-import { Error } from '@openedx/paragon/icons';
 import PropTypes from 'prop-types';
 
 import { windowScrollTo } from '../../data/utils';
@@ -58,10 +56,15 @@ const RegistrationFailureMessage = (props) => {
   }
 
   return (
-    <Alert id="validation-errors" className="mb-5" variant="danger" icon={Error}>
-      <Alert.Heading>{formatMessage(messages['registration.request.failure.header'])}</Alert.Heading>
-      <p>{errorMessage}</p>
-    </Alert>
+    <div id="validation-errors" className="mb-4 p-4 rounded-xl bg-red-50 border border-red-100 flex flex-col items-center text-center w-full shadow-sm max-w-md mx-auto">
+      <div className="flex items-center gap-2 mb-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+        <span className="font-bold text-red-900 text-sm tracking-tight">
+          {formatMessage(messages['registration.request.failure.header'])}
+        </span>
+      </div>
+      <p className="text-sm text-red-700 leading-snug">{errorMessage}</p>
+    </div>
   );
 };
 

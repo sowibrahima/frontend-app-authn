@@ -1,40 +1,23 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
-import {
-  Form, Icon, IconButton, OverlayTrigger, Tooltip, useToggle,
-} from '@openedx/paragon';
-import {
-  Check, Remove, Visibility, VisibilityOff,
-} from '@openedx/paragon/icons';
 import PropTypes from 'prop-types';
 
 import messages from './messages';
 import { LETTER_REGEX, NUMBER_REGEX } from '../data/constants';
-import { useRegisterContext } from '../register/components/RegisterContext';
-import { useFieldValidations } from '../register/data/apiHook';
+import { clearRegistrationBackendError, fetchRealtimeValidations } from '../register/data/actions';
 import { validatePasswordField } from '../register/data/utils';
 
 const PasswordField = (props) => {
   const { formatMessage } = useIntl();
-  const [isPasswordHidden, setHiddenTrue, setHiddenFalse] = useToggle(true);
+  const dispatch = useDispatch();
+
+  const validationApiRateLimited = useSelector(state => state.register.validationApiRateLimited);
+  const [isPasswordHidden, setIsPasswordHidden] = useState(true);
+  const setHiddenTrue = () => setIsPasswordHidden(true);
+  const setHiddenFalse = () => setIsPasswordHidden(false);
   const [showTooltip, setShowTooltip] = useState(false);
-
-  const {
-    setValidationsSuccess,
-    setValidationsFailure,
-    validationApiRateLimited,
-    clearRegistrationBackendError,
-  } = useRegisterContext();
-
-  const fieldValidationsMutation = useFieldValidations({
-    onSuccess: (data) => {
-      setValidationsSuccess(data);
-    },
-    onError: () => {
-      setValidationsFailure();
-    },
-  });
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
@@ -63,7 +46,7 @@ const PasswordField = (props) => {
       if (fieldError) {
         props.handleErrorChange('password', fieldError);
       } else if (!validationApiRateLimited) {
-        fieldValidationsMutation.mutate({ password: passwordValue });
+        dispatch(fetchRealtimeValidations({ password: passwordValue }));
       }
     }
   };
@@ -78,83 +61,87 @@ const PasswordField = (props) => {
     }
     if (props.handleErrorChange) {
       props.handleErrorChange('password', '');
-      clearRegistrationBackendError('password');
+      dispatch(clearRegistrationBackendError('password'));
     }
     setTimeout(() => setShowTooltip(props.showRequirements && true), 150);
   };
 
-  const HideButton = (
-    <IconButton
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      name="passwordIcon"
-      src={VisibilityOff}
-      iconAs={Icon}
-      onClick={setHiddenTrue}
-      size="sm"
-      variant="secondary"
-      alt={formatMessage(messages['hide.password'])}
-    />
-  );
-
-  const ShowButton = (
-    <IconButton
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      name="passwordIcon"
-      src={Visibility}
-      iconAs={Icon}
-      onClick={setHiddenFalse}
-      size="sm"
-      variant="secondary"
-      alt={formatMessage(messages['show.password'])}
-    />
-  );
-
-  const placement = window.innerWidth < 768 ? 'top' : 'left';
-  const tooltip = (
-    <Tooltip id={`password-requirement-${placement}`}>
-      <span id="letter-check" className="d-flex align-items-center">
-        {LETTER_REGEX.test(props.value) ? <Icon className="text-success mr-1" src={Check} /> : <Icon className="mr-1 text-light-700" src={Remove} />}
-        {formatMessage(messages['one.letter'])}
-      </span>
-      <span id="number-check" className="d-flex align-items-center">
-        {NUMBER_REGEX.test(props.value) ? <Icon className="text-success mr-1" src={Check} /> : <Icon className="mr-1 text-light-700" src={Remove} />}
-        {formatMessage(messages['one.number'])}
-      </span>
-      <span id="characters-check" className="d-flex align-items-center">
-        {props.value.length >= 8 ? <Icon className="text-success mr-1" src={Check} /> : <Icon className="mr-1 text-light-700" src={Remove} />}
-        {formatMessage(messages['eight.characters'])}
-      </span>
-    </Tooltip>
-  );
-
   return (
-    <Form.Group controlId={props.name} isInvalid={props.errorMessage !== ''}>
-      <OverlayTrigger key="tooltip" placement={placement} overlay={tooltip} show={showTooltip}>
-        <Form.Control
-          as="input"
-          className="form-group__form-field"
+    <div className={`relative ${props.className || 'mb-5'}`}>
+      {/* Label */}
+      <label
+        htmlFor={props.name}
+        className="block wuti-label mb-1.5"
+      >
+        {props.floatingLabel}
+      </label>
+
+      {/* Input wrapper */}
+      <div className="relative">
+        <input
+          id={props.name}
+          className={`wuti-input wuti-input-password ${props.errorMessage ? 'wuti-input-error' : ''} ${props.borderClass}`}
           type={isPasswordHidden ? 'password' : 'text'}
           name={props.name}
           value={props.value}
           autoComplete={props.autoComplete}
+          placeholder={props.placeholder}
           aria-invalid={props.errorMessage !== ''}
           onFocus={handleFocus}
           onBlur={handleBlur}
           onChange={props.handleChange}
-          controlClassName={props.borderClass}
-          trailingElement={isPasswordHidden ? ShowButton : HideButton}
-          floatingLabel={props.floatingLabel}
+          readOnly={props.readOnly}
         />
-      </OverlayTrigger>
-      {props.errorMessage !== '' && (
-        <Form.Control.Feedback key="error" className="form-text-size" hasIcon={false} feedback-for={props.name} type="invalid">
-          {props.errorMessage}
-          {props.showScreenReaderText && <span className="sr-only">{formatMessage(messages['password.sr.only.helping.text'])}</span>}
-        </Form.Control.Feedback>
-      )}
-    </Form.Group>
+
+        {/* Password toggle icon */}
+        <button
+          type="button"
+          name="passwordIcon"
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onClick={isPasswordHidden ? setHiddenFalse : setHiddenTrue}
+          className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors focus:outline-none"
+          aria-label={isPasswordHidden ? formatMessage(messages['show.password']) : formatMessage(messages['hide.password'])}
+        >
+          {isPasswordHidden ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></svg>
+          )}
+        </button>
+      </div>
+
+      {/* Password requirements and error messages with reserved space to prevent layout shift */}
+      <div className="mt-1 min-h-[20px] mb-2">
+        {props.errorMessage ? (
+          <p className="text-xs font-semibold text-red-600 tracking-wide animate-[fadeIn_0.2s_ease-out]">
+            {props.errorMessage}
+            {props.showScreenReaderText && <span className="sr-only">{formatMessage(messages['password.sr.only.helping.text'])}</span>}
+          </p>
+        ) : showTooltip && props.showRequirements ? (
+          <div className="bg-white border border-neutral-100 shadow-sm rounded-lg p-3 animate-[fadeIn_0.2s_ease-out]">
+            <div className="flex items-center text-sm mb-1.5">
+              <span className={`mr-2 flex-shrink-0 ${LETTER_REGEX.test(props.value) ? 'text-green-500' : 'text-gray-300'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </span>
+              <span className="text-gray-600">{formatMessage(messages['one.letter'])}</span>
+            </div>
+            <div className="flex items-center text-sm mb-1.5">
+              <span className={`mr-2 flex-shrink-0 ${NUMBER_REGEX.test(props.value) ? 'text-green-500' : 'text-gray-300'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </span>
+              <span className="text-gray-600">{formatMessage(messages['one.number'])}</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <span className={`mr-2 flex-shrink-0 ${props.value.length >= 8 ? 'text-green-500' : 'text-gray-300'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </span>
+              <span className="text-gray-600">{formatMessage(messages['eight.characters'])}</span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 };
 
@@ -163,11 +150,12 @@ PasswordField.defaultProps = {
   errorMessage: '',
   handleBlur: null,
   handleFocus: null,
-  handleChange: () => {},
+  handleChange: () => { },
   handleErrorChange: null,
   showRequirements: true,
   showScreenReaderText: true,
   autoComplete: null,
+  placeholder: null,
 };
 
 PasswordField.propTypes = {
@@ -183,6 +171,7 @@ PasswordField.propTypes = {
   value: PropTypes.string.isRequired,
   autoComplete: PropTypes.string,
   showScreenReaderText: PropTypes.bool,
+  placeholder: PropTypes.string,
 };
 
 export default PasswordField;

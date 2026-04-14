@@ -26,6 +26,7 @@ import { RegistrationPage } from './register';
 import { ResetPasswordPage } from './reset-password';
 
 import './index.scss';
+import './index.css';
 
 registerIcons();
 

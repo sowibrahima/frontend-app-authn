@@ -21,7 +21,7 @@ const ProgressiveProfilingPageModal = (props) => {
     <ModalDialog
       title={formatMessage(messages['modal.title'])}
       isOpen={isOpen}
-      onClose={() => {}}
+      onClose={() => { }}
       size="sm"
       variant="default"
       hasCloseButton={false}
