@@ -5,12 +5,6 @@ import { getConfig } from '@edx/frontend-platform';
 import { sendPageEvent, sendTrackEvent } from '@edx/frontend-platform/analytics';
 import { getAuthService } from '@edx/frontend-platform/auth';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import {
-  Icon,
-  Tab,
-  Tabs,
-} from '@openedx/paragon';
-import { ChevronLeft } from '@openedx/paragon/icons';
 import PropTypes from 'prop-types';
 import { Navigate, useNavigate } from 'react-router-dom';
 
@@ -85,17 +79,6 @@ const Logistration = ({
     setKey(tabKey);
   };
 
-  const tabTitle = (
-    <div className="d-flex">
-      <Icon src={ChevronLeft} className="left-icon" />
-      <span className="ml-2">
-        {selectedPage === LOGIN_PAGE
-          ? formatMessage(messages['logistration.sign.in'])
-          : formatMessage(messages['logistration.register'])}
-      </span>
-    </div>
-  );
-
   const isValidTpaHint = () => {
     const { provider } = getTpaProvider(tpaHint, providers, secondaryProviders);
     return !!provider;
@@ -103,69 +86,25 @@ const Logistration = ({
 
   return (
     <BaseContainer>
-      <div>
-        {disablePublicAccountCreation
-          ? (
-            <>
-              {institutionLogin && (
-                <Tabs defaultActiveKey="" id="controlled-tab" onSelect={handleInstitutionLogin}>
-                  <Tab title={tabTitle} eventKey={LOGIN_PAGE} />
-                </Tabs>
-              )}
-              <div id="main-content" className="main-content">
-                {!institutionLogin && (
-                  <h3 className="mb-4.5">{formatMessage(messages['logistration.sign.in'])}</h3>
-                )}
-                <LoginComponentSlot
-                  institutionLogin={institutionLogin}
-                  handleInstitutionLogin={handleInstitutionLogin}
-                />
-              </div>
-            </>
-          )
-          : (
-            <div>
-              {institutionLogin
-                ? (
-                  <Tabs defaultActiveKey="" id="controlled-tab" onSelect={handleInstitutionLogin}>
-                    <Tab title={tabTitle} eventKey={selectedPage === LOGIN_PAGE ? LOGIN_PAGE : REGISTER_PAGE} />
-                  </Tabs>
-                )
-                : (!isValidTpaHint() && !hideRegistrationLink && (
-                  <Tabs
-                    defaultActiveKey={selectedPage}
-                    id="controlled-tab"
-                    onSelect={(tabKey) => handleOnSelect(tabKey, selectedPage)}
-                  >
-                    <Tab title={formatMessage(messages['logistration.register'])} eventKey={REGISTER_PAGE} />
-                    <Tab title={formatMessage(messages['logistration.sign.in'])} eventKey={LOGIN_PAGE} />
-                  </Tabs>
-                ))}
-              {key && (
-                <Navigate to={updatePathWithQueryParams(key)} replace />
-              )}
-              <div id="main-content" className="main-content">
-                {!institutionLogin && !isValidTpaHint() && hideRegistrationLink && (
-                  <h3 className="mb-4.5">
-                    {formatMessage(messages[selectedPage === LOGIN_PAGE ? 'logistration.sign.in' : 'logistration.register'])}
-                  </h3>
-                )}
-                {selectedPage === LOGIN_PAGE
-                  ? (
-                    <LoginComponentSlot
-                      institutionLogin={institutionLogin}
-                      handleInstitutionLogin={handleInstitutionLogin}
-                    />
-                  )
-                  : (
-                    <RegistrationPage
-                      institutionLogin={institutionLogin}
-                      handleInstitutionLogin={handleInstitutionLogin}
-                    />
-                  )}
-              </div>
-            </div>
-          )}
+      <div className="w-full flex-grow flex flex-col items-center justify-center">
+        {key && (
+          <Navigate to={updatePathWithQueryParams(key)} replace />
+        )}
+        <div id="main-content" className="w-full relative z-10 flex justify-center">
+          {selectedPage === LOGIN_PAGE
+            ? (
+              <LoginComponentSlot
+                institutionLogin={institutionLogin}
+                handleInstitutionLogin={handleInstitutionLogin}
+              />
+            )
+            : (
+              <RegistrationPage
+                institutionLogin={institutionLogin}
+                handleInstitutionLogin={handleInstitutionLogin}
+              />
+            )}
+        </div>
       </div>
     </BaseContainer>
   );

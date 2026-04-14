@@ -43,7 +43,7 @@ const ForgotPasswordAlert = (props) => {
           }}
         />
       );
-     break;
+      break;
     case INTERNAL_SERVER_ERROR:
       message = formatMessage(messages['internal.server.error']);
       break;

@@ -3,8 +3,6 @@ import React, { useEffect } from 'react';
 import { getConfig } from '@edx/frontend-platform';
 import { getAuthService } from '@edx/frontend-platform/auth';
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
-import { Alert, Hyperlink } from '@openedx/paragon';
-import { Error } from '@openedx/paragon/icons';
 import PropTypes from 'prop-types';
 
 import ChangePasswordPrompt from './ChangePasswordPrompt';
@@ -42,10 +40,12 @@ const LoginFailureMessage = (props) => {
     return null;
   }
 
+  const linkStyles = 'text-brand hover:text-brand-burgundy underline decoration-brand/30 transition-colors font-medium';
+
   let resetLink = (
-    <Hyperlink destination="reset" isInline>
+    <a href="/reset" className={linkStyles}>
       {formatMessage(messages['login.incorrect.credentials.error.reset.link.text'])}
-    </Hyperlink>
+    </a>
   );
 
   let errorMessage;
@@ -53,7 +53,7 @@ const LoginFailureMessage = (props) => {
     case NON_COMPLIANT_PASSWORD_EXCEPTION: {
       errorMessage = (
         <>
-          <strong>{formatMessage(messages['non.compliant.password.title'])}</strong>
+          <strong className="block mb-1">{formatMessage(messages['non.compliant.password.title'])}</strong>
           <p>{formatMessage(messages['non.compliant.password.message'])}</p>
         </>
       );
@@ -64,7 +64,7 @@ const LoginFailureMessage = (props) => {
       break;
     case INACTIVE_USER: {
       const supportLink = (
-        <a href={context.supportLink}>
+        <a href={context.supportLink} className={linkStyles}>
           {formatMessage(messages['contact.support.link'], { platformName: context.platformName })}
         </a>
       );
@@ -77,7 +77,7 @@ const LoginFailureMessage = (props) => {
             check your spam folders or {supportLink}."
             values={{
               lineBreak: <br />,
-              email: <strong className="data-hj-suppress">{context.email}</strong>,
+              email: <strong>{context.email}</strong>,
               supportLink,
             }}
           />
@@ -88,7 +88,7 @@ const LoginFailureMessage = (props) => {
     case ALLOWED_DOMAIN_LOGIN_ERROR: {
       const url = `${getConfig().LMS_BASE_URL}/dashboard/?tpa_hint=${context.tpaHint}`;
       const tpaLink = (
-        <a href={url}>
+        <a href={url} className={linkStyles}>
           {formatMessage(messages['tpa.account.link'], { provider: context.provider })}
         </a>
       );
@@ -109,12 +109,12 @@ const LoginFailureMessage = (props) => {
       break;
     case FAILED_LOGIN_ATTEMPT: {
       resetLink = (
-        <Hyperlink destination="reset" isInline>
+        <a href="/reset" className={linkStyles}>
           {formatMessage(messages['login.incorrect.credentials.error.before.account.blocked.text'])}
-        </Hyperlink>
+        </a>
       );
       errorMessage = (
-        <>
+        <div className="space-y-2">
           <p>
             <FormattedMessage
               id="login.incorrect.credentials.error.attempts.text.1"
@@ -132,13 +132,13 @@ const LoginFailureMessage = (props) => {
               values={{ resetLink }}
             />
           </p>
-        </>
+        </div>
       );
       break;
     }
     case ACCOUNT_LOCKED_OUT: {
       errorMessage = (
-        <>
+        <div className="space-y-2">
           <p>{formatMessage(messages['account.locked.out.message.1'])}</p>
           <p>
             <FormattedMessage
@@ -148,7 +148,7 @@ const LoginFailureMessage = (props) => {
               values={{ resetLink }}
             />
           </p>
-        </>
+        </div>
       );
       break;
     }
@@ -198,10 +198,17 @@ const LoginFailureMessage = (props) => {
   }
 
   return (
-    <Alert id="login-failure-alert" className="mb-5" variant="danger" icon={Error}>
-      <Alert.Heading>{formatMessage(messages['login.failure.header.title'])}</Alert.Heading>
-      { errorMessage }
-    </Alert>
+    <div id="login-failure-alert" className="mb-5 w-full bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl flex items-start gap-3 font-sans text-sm">
+      <svg className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <h4 className="font-bold mb-1">{formatMessage(messages['login.failure.header.title'])}</h4>
+        <div className="text-red-700/90 leading-relaxed">
+          {errorMessage}
+        </div>
+      </div>
+    </div>
   );
 };
 

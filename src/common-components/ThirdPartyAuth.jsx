@@ -2,10 +2,6 @@ import React from 'react';
 
 import { getConfig } from '@edx/frontend-platform';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import {
-  Hyperlink, Icon,
-} from '@openedx/paragon';
-import { Institution } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import Skeleton from 'react-loading-skeleton';
@@ -42,29 +38,31 @@ const ThirdPartyAuth = (props) => {
   return (
     <>
       {((isEnterpriseLoginDisabled && isInstitutionAuthActive) || isSocialAuthActive) && (
-        <div className="mt-4 mb-3 h4">
+        <div className="mt-4 mb-3 font-bold text-neutral-900 text-sm">
           {isLoginPage
             ? formatMessage(messages['login.other.options.heading'])
             : formatMessage(messages['registration.other.options.heading'])}
         </div>
       )}
       {(isLoginPage && !isEnterpriseLoginDisabled && isSocialAuthActive) && (
-        <Hyperlink
+        <a
           className={classNames(
-            'btn btn-link btn-sm text-body p-0',
+            'flex items-center justify-center gap-3 w-full py-2.5 px-4 border border-[#dadce0] rounded-full bg-white hover:bg-[#f8f9fa] transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4285F4] focus:ring-offset-1 text-sm font-medium text-[#3c4043] font-sans',
             { 'mb-0': thirdPartyAuthApiStatus === PENDING_STATE },
             { 'mb-4': thirdPartyAuthApiStatus !== PENDING_STATE },
           )}
-          destination={enterpriseLoginURL}
+          href={enterpriseLoginURL}
         >
-          <Icon src={Institution} className="institute-icon" />
+          <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
           {formatMessage(messages['enterprise.login.btn.text'])}
-        </Hyperlink>
+        </a>
       )}
 
       {thirdPartyAuthApiStatus === PENDING_STATE && isThirdPartyAuthActive ? (
         <div className="mt-4">
-          <Skeleton className="tpa-skeleton" height={36} count={2} />
+          <Skeleton className="rounded-full" height={36} count={2} />
         </div>
       ) : (
         <>
@@ -75,7 +73,7 @@ const ThirdPartyAuth = (props) => {
             />
           )}
           {isSocialAuthActive && (
-            <div className="row m-0">
+            <div className="w-full space-y-3">
               <SocialAuthProviders
                 socialAuthProviders={providers}
                 referrer={isLoginPage ? LOGIN_PAGE : REGISTER_PAGE}

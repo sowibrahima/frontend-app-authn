@@ -1,21 +1,20 @@
 import {
-  useCallback, useEffect, useMemo, useState,
+  useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState,
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { getConfig } from '@edx/frontend-platform';
 import { sendPageEvent, sendTrackEvent } from '@edx/frontend-platform/analytics';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { Form, StatefulButton } from '@openedx/paragon';
+import gsap from 'gsap';
+import { ArrowRight, Award } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { Helmet } from 'react-helmet';
 import Skeleton from 'react-loading-skeleton';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import {
-  FormGroup,
   InstitutionLogistration,
-  PasswordField,
   RedirectLogistration,
   ThirdPartyAuthAlert,
 } from '../common-components';
@@ -24,7 +23,7 @@ import { getThirdPartyAuthContext } from '../common-components/data/actions';
 import { thirdPartyAuthContextSelector } from '../common-components/data/selectors';
 import EnterpriseSSO from '../common-components/EnterpriseSSO';
 import ThirdPartyAuth from '../common-components/ThirdPartyAuth';
-import { PENDING_STATE, RESET_PAGE } from '../data/constants';
+import { PENDING_STATE, REGISTER_PAGE, RESET_PAGE } from '../data/constants';
 import {
   getActivationStatus,
   getAllPossibleQueryParams,
@@ -43,6 +42,7 @@ const LoginPage = ({
   handleInstitutionLogin,
 }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const backupFormState = useCallback((data) => dispatch(backupLoginFormBegin(data)), [dispatch]);
   const getTPADataFromBackend = useCallback(() => dispatch(getThirdPartyAuthContext()), [dispatch]);
   const {
@@ -86,6 +86,28 @@ const LoginPage = ({
   });
   const [errors, setErrors] = useState({ ...backedUpFormData.errors });
   const tpaHint = getTpaHint();
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.auth-card', {
+        y: 30,
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+      });
+
+      gsap.from('.auth-element', {
+        y: 15,
+        opacity: 0,
+        duration: 0.4,
+        stagger: 0.05,
+        ease: 'power2.out',
+        delay: 0.1,
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
   useEffect(() => {
     sendPageEvent('login_and_registration', 'login');
@@ -153,6 +175,8 @@ const LoginPage = ({
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (submitState === PENDING_STATE) { return; }
+
     if (showResetPasswordSuccessBanner) {
       dispatch(dismissPasswordResetBanner());
     }
@@ -228,6 +252,7 @@ const LoginPage = ({
       />
     );
   }
+
   return (
     <>
       <Helmet>
@@ -238,73 +263,144 @@ const LoginPage = ({
         redirectUrl={loginResult.redirectUrl}
         finishAuthUrl={finishAuthUrl}
       />
-      <div className="mw-xs mt-3 mb-2">
-        <LoginFailureMessage
-          errorCode={errorCode.type}
-          errorCount={errorCode.count}
-          context={errorCode.context}
-        />
-        <ThirdPartyAuthAlert
-          currentProvider={currentProvider}
-          platformName={platformName}
-        />
-        <AccountActivationMessage
-          messageType={activationMsgType}
-        />
-        {showResetPasswordSuccessBanner && <ResetPasswordSuccess />}
-        <Form id="sign-in-form" name="sign-in-form">
-          <FormGroup
-            name="emailOrUsername"
-            value={formFields.emailOrUsername}
-            autoComplete="on"
-            handleChange={handleOnChange}
-            handleFocus={handleOnFocus}
-            errorMessage={errors.emailOrUsername}
-            floatingLabel={formatMessage(messages['login.user.identity.label'])}
-          />
-          <PasswordField
-            name="password"
-            value={formFields.password}
-            autoComplete="off"
-            showScreenReaderText={false}
-            showRequirements={false}
-            handleChange={handleOnChange}
-            handleFocus={handleOnFocus}
-            errorMessage={errors.password}
-            floatingLabel={formatMessage(messages['login.password.label'])}
-          />
-          <StatefulButton
-            name="sign-in"
-            id="sign-in"
-            type="submit"
-            variant="brand"
-            className="login-button-width"
-            state={submitState}
-            labels={{
-              default: formatMessage(messages['sign.in.button']),
-              pending: '',
-            }}
-            onClick={handleSubmit}
-            onMouseDown={(event) => event.preventDefault()}
-          />
-          <Link
-            id="forgot-password"
-            name="forgot-password"
-            className="btn btn-link font-weight-500 text-body"
-            to={updatePathWithQueryParams(RESET_PAGE)}
-            onClick={trackForgotPasswordLinkClick}
-          >
-            {formatMessage(messages['forgot.password'])}
-          </Link>
-          <ThirdPartyAuth
-            currentProvider={currentProvider}
-            providers={providers}
-            secondaryProviders={secondaryProviders}
-            handleInstitutionLogin={handleInstitutionLogin}
-            thirdPartyAuthApiStatus={thirdPartyAuthApiStatus}
-            isLoginPage
-          />
-        </Form>
+
+      <div ref={containerRef} className="w-full flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+
+        <div className="auth-card w-full max-w-md relative z-10">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <a href={getConfig().LMS_BASE_URL} className="flex items-center gap-2 group">
+              <Award className="w-10 h-10 text-brand group-hover:rotate-12 transition-transform duration-500 ease-out" />
+              <span className="text-2xl font-bold text-neutral-900 tracking-tight">{getConfig().SITE_NAME}</span>
+            </a>
+          </div>
+
+          {/* Error and Alert Messages */}
+          <div className="mb-4">
+            <LoginFailureMessage
+              errorCode={errorCode.type}
+              errorCount={errorCode.count}
+              context={errorCode.context}
+            />
+            <ThirdPartyAuthAlert
+              currentProvider={currentProvider}
+              platformName={platformName}
+            />
+            <AccountActivationMessage
+              messageType={activationMsgType}
+            />
+            {showResetPasswordSuccessBanner && <ResetPasswordSuccess />}
+          </div>
+
+          {/* Form Container */}
+          <div className="wuti-auth-card px-8 py-10">
+            <div className="text-center mb-8">
+              <h2 className="auth-element text-3xl font-bold text-neutral-900 tracking-tight mb-2">
+                Bon retour !
+              </h2>
+              <p className="auth-element text-sm font-mono text-neutral-500">
+                Connectez-vous pour accéder à vos formations.
+              </p>
+            </div>
+
+            <form className="space-y-6" id="sign-in-form" name="sign-in-form" onSubmit={handleSubmit}>
+              {/* Email field */}
+              <div className="auth-element space-y-2">
+                <label className="wuti-label">Adresse e-mail</label>
+                <input
+                  type="text"
+                  name="emailOrUsername"
+                  value={formFields.emailOrUsername}
+                  autoComplete="on"
+                  onChange={handleOnChange}
+                  onFocus={handleOnFocus}
+                  placeholder="prénom.nom@exemple.com"
+                  className={`wuti-input ${errors.emailOrUsername ? 'wuti-input-error' : ''}`}
+                />
+                {errors.emailOrUsername && <span className="text-xs text-red-500 mt-1 block">{errors.emailOrUsername}</span>}
+              </div>
+
+              {/* Password field */}
+              <div className="auth-element space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="wuti-label mb-0">Mot de passe</label>
+                  <Link
+                    id="forgot-password"
+                    name="forgot-password"
+                    to={updatePathWithQueryParams(RESET_PAGE)}
+                    onClick={trackForgotPasswordLinkClick}
+                    className="wuti-link"
+                  >
+                    Oublié ?
+                  </Link>
+                </div>
+                <input
+                  type="password"
+                  name="password"
+                  value={formFields.password}
+                  autoComplete="off"
+                  onChange={handleOnChange}
+                  onFocus={handleOnFocus}
+                  placeholder="••••••••"
+                  className={`wuti-input wuti-input-password ${errors.password ? 'wuti-input-error' : ''}`}
+                />
+                {errors.password && <span className="text-xs text-red-500 mt-1 block">{errors.password}</span>}
+              </div>
+
+              {/* Submit Button */}
+              <div className="auth-element pt-4">
+                <button
+                  id="sign-in"
+                  name="sign-in"
+                  type="submit"
+                  onMouseDown={(event) => event.preventDefault()}
+                  disabled={submitState === PENDING_STATE}
+                  className="wuti-btn-primary"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    {submitState === PENDING_STATE ? 'Connexion en cours...' : 'Se connecter'}
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  </span>
+                </button>
+              </div>
+            </form>
+
+            {/* Divider */}
+            <div className="auth-element wuti-divider">
+              <hr className="wuti-divider-line" />
+              <span className="wuti-divider-text">Ou continuer avec</span>
+            </div>
+
+            {/* Third party auth */}
+            <div className="auth-element mt-8">
+              <ThirdPartyAuth
+                currentProvider={currentProvider}
+                providers={providers}
+                secondaryProviders={secondaryProviders}
+                handleInstitutionLogin={handleInstitutionLogin}
+                thirdPartyAuthApiStatus={thirdPartyAuthApiStatus}
+                isLoginPage
+              />
+            </div>
+
+            <p className="auth-element mt-10 text-center text-sm text-neutral-500 font-medium">
+              Vous n'avez pas de compte ?&nbsp;
+              <button
+                onClick={() => navigate(updatePathWithQueryParams(REGISTER_PAGE))}
+                className="wuti-link bg-transparent border-none p-0 inline"
+              >
+                S'inscrire
+              </button>
+            </p>
+          </div>
+
+          {/* Footer text */}
+          <div className="mt-8 text-center px-4">
+            <p className="wuti-footer-text">
+              En continuant, vous acceptez nos <a href={`${getConfig().LMS_BASE_URL}/tos`} className="wuti-link-muted">Conditions d'utilisation</a><br className="hidden sm:block" /> et notre <a href={`${getConfig().LMS_BASE_URL}/privacy`} className="wuti-link-muted">Politique de confidentialité</a>.
+            </p>
+          </div>
+        </div>
       </div>
     </>
   );

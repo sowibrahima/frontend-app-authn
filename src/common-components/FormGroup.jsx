@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 
-import {
-  Form, TransitionReplace,
-} from '@openedx/paragon';
 import PropTypes from 'prop-types';
 
 const FormGroup = (props) => {
@@ -21,44 +18,89 @@ const FormGroup = (props) => {
   };
 
   return (
-    <Form.Group controlId={props.name} className={props.className} isInvalid={props.errorMessage !== ''}>
-      <Form.Control
-        as={props.as}
-        readOnly={props.readOnly}
-        type={props.type}
-        aria-invalid={props.errorMessage !== ''}
-        className="form-group__form-field"
-        autoComplete={props.autoComplete}
-        spellCheck={props.spellCheck}
-        name={props.name}
-        value={props.value}
-        onFocus={handleFocus}
-        onBlur={handleOnBlur}
-        onClick={handleClick}
-        onChange={props.handleChange}
-        controlClassName={props.borderClass}
-        trailingElement={props.trailingElement}
-        floatingLabel={props.floatingLabel}
+    <div className={`relative ${props.className || 'mb-5'}`}>
+      {/* Label */}
+      <label
+        htmlFor={props.name}
+        className="block wuti-label mb-1.5"
       >
-        {props.options ? props.options() : null}
-      </Form.Control>
-      <TransitionReplace>
-        {hasFocus && props.helpText ? (
-          <Form.Control.Feedback type="default" key="help-text" className="d-block form-text-size">
-            {props.helpText.map((message, index) => (
-              <span key={`help-text-${index.toString()}`}>
+        {props.floatingLabel}
+      </label>
+
+      {/* Input wrapper */}
+      <div className="relative">
+        {props.as === 'textarea' ? (
+          <textarea
+            id={props.name}
+            name={props.name}
+            value={props.value}
+            readOnly={props.readOnly}
+            spellCheck={props.spellCheck}
+            placeholder={props.placeholder}
+            onFocus={handleFocus}
+            onBlur={handleOnBlur}
+            onClick={handleClick}
+            onChange={props.handleChange}
+            className={`wuti-input min-h-[100px] ${props.errorMessage ? 'wuti-input-error' : ''} ${props.borderClass}`}
+          />
+        ) : props.as === 'select' ? (
+          <select
+            id={props.name}
+            name={props.name}
+            value={props.value}
+            onFocus={handleFocus}
+            onBlur={handleOnBlur}
+            onClick={handleClick}
+            onChange={props.handleChange}
+            className={`wuti-input appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%207l5%205%205-5%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_1rem_center] ${props.errorMessage ? 'wuti-input-error' : ''} ${props.borderClass}`}
+          >
+            {props.options ? props.options() : null}
+          </select>
+        ) : (
+          <input
+            id={props.name}
+            name={props.name}
+            type={props.type}
+            value={props.value}
+            readOnly={props.readOnly}
+            autoComplete={props.autoComplete}
+            spellCheck={props.spellCheck}
+            placeholder={props.placeholder}
+            onFocus={handleFocus}
+            onBlur={handleOnBlur}
+            onClick={handleClick}
+            onChange={props.handleChange}
+            className={`wuti-input ${props.errorMessage ? 'wuti-input-error' : ''} ${props.type === 'password' ? 'wuti-input-password' : ''} ${props.borderClass}`}
+          />
+        )}
+
+        {/* Trailing element (e.g., password toggle icon) */}
+        {props.trailingElement && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+            {props.trailingElement}
+          </div>
+        )}
+      </div>
+
+      {/* Reserved space for help and error text to prevent layout shift */}
+      <div className="mt-1 min-h-[20px] flex flex-col justify-start mb-2">
+        {props.errorMessage ? (
+          <p className="text-xs font-semibold text-red-600 tracking-wide animate-[fadeIn_0.2s_ease-out]">
+            {props.errorMessage}
+          </p>
+        ) : hasFocus && props.helpText && props.helpText.length > 0 ? (
+          <div className="animate-[fadeIn_0.2s_ease-out]">
+            {props.helpText?.map((message, index) => (
+              <p key={`help-text-${index}`} className="text-xs text-neutral-500 mb-0.5 leading-relaxed">
                 {message}
-                <br />
-              </span>
+              </p>
             ))}
-          </Form.Control.Feedback>
-        ) : <div key="empty" />}
-      </TransitionReplace>
-      {props.errorMessage !== '' && (
-        <Form.Control.Feedback key="error" className="form-text-size" hasIcon={false} feedback-for={props.name} type="invalid">{props.errorMessage}</Form.Control.Feedback>
-      )}
+          </div>
+        ) : null}
+      </div>
+
       {props.children}
-    </Form.Group>
+    </div>
   );
 };
 
@@ -70,13 +112,13 @@ FormGroup.defaultProps = {
   className: '',
   errorMessage: '',
   handleBlur: null,
-  handleChange: () => {},
+  handleChange: () => { },
   handleClick: null,
   handleFocus: null,
   helpText: [],
   options: null,
-  readOnly: false,
   spellCheck: null,
+  placeholder: null,
   trailingElement: null,
   type: 'text',
 };
@@ -98,6 +140,7 @@ FormGroup.propTypes = {
   options: PropTypes.func,
   readOnly: PropTypes.bool,
   spellCheck: PropTypes.string,
+  placeholder: PropTypes.string,
   trailingElement: PropTypes.element,
   type: PropTypes.string,
   value: PropTypes.string.isRequired,

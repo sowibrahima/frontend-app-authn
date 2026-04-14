@@ -1,62 +1,17 @@
 import React from 'react';
 
-import { getConfig } from '@edx/frontend-platform';
-import { breakpoints } from '@openedx/paragon';
-import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import MediaQuery from 'react-responsive';
 
-import { DefaultLargeLayout, DefaultMediumLayout, DefaultSmallLayout } from './components/default-layout';
-import {
-  ImageExtraSmallLayout, ImageLargeLayout, ImageMediumLayout, ImageSmallLayout,
-} from './components/image-layout';
-import { AuthLargeLayout, AuthMediumLayout, AuthSmallLayout } from './components/welcome-page-layout';
+const BaseContainer = ({ children, showWelcomeBanner, fullName }) => (
+  <div className="w-full min-h-screen bg-[#FDFDFB] relative overflow-hidden flex flex-col items-center justify-center font-sans">
+    <div className="fixed top-1/2 left-0 -translate-y-1/2 w-[600px] h-[600px] bg-brand/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 z-0" />
+    <div className="fixed top-1/2 right-0 -translate-y-1/2 w-[500px] h-[500px] bg-action-gold/5 rounded-full blur-[100px] pointer-events-none translate-x-1/3 z-0" />
 
-const BaseContainer = ({ children, showWelcomeBanner, fullName }) => {
-  const enableImageLayout = getConfig().ENABLE_IMAGE_LAYOUT;
-
-  if (enableImageLayout) {
-    return (
-      <div className="layout">
-        <MediaQuery maxWidth={breakpoints.extraSmall.maxWidth - 1}>
-          {showWelcomeBanner ? <AuthSmallLayout fullName={fullName} /> : <ImageExtraSmallLayout />}
-        </MediaQuery>
-        <MediaQuery minWidth={breakpoints.small.minWidth} maxWidth={breakpoints.small.maxWidth - 1}>
-          {showWelcomeBanner ? <AuthSmallLayout fullName={fullName} /> : <ImageSmallLayout />}
-        </MediaQuery>
-        <MediaQuery minWidth={breakpoints.medium.minWidth} maxWidth={breakpoints.large.maxWidth - 1}>
-          {showWelcomeBanner ? <AuthMediumLayout fullName={fullName} /> : <ImageMediumLayout />}
-        </MediaQuery>
-        <MediaQuery minWidth={breakpoints.extraLarge.minWidth}>
-          {showWelcomeBanner ? <AuthLargeLayout fullName={fullName} /> : <ImageLargeLayout />}
-        </MediaQuery>
-        <div className={classNames('content', { 'align-items-center mt-0': showWelcomeBanner })}>
-          {children}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="col-md-12 extra-large-screen-top-stripe" />
-      <div className="layout">
-        <MediaQuery maxWidth={breakpoints.small.maxWidth - 1}>
-          {showWelcomeBanner ? <AuthSmallLayout fullName={fullName} /> : <DefaultSmallLayout />}
-        </MediaQuery>
-        <MediaQuery minWidth={breakpoints.medium.minWidth} maxWidth={breakpoints.large.maxWidth - 1}>
-          {showWelcomeBanner ? <AuthMediumLayout fullName={fullName} /> : <DefaultMediumLayout />}
-        </MediaQuery>
-        <MediaQuery minWidth={breakpoints.extraLarge.minWidth}>
-          {showWelcomeBanner ? <AuthLargeLayout fullName={fullName} /> : <DefaultLargeLayout />}
-        </MediaQuery>
-        <div className={classNames('content', { 'align-items-center mt-0': showWelcomeBanner })}>
-          {children}
-        </div>
-      </div>
-    </>
-  );
-};
+    <div className="relative z-10 w-full flex flex-col items-center p-4">
+      {children}
+    </div>
+  </div>
+);
 
 BaseContainer.defaultProps = {
   showWelcomeBanner: false,

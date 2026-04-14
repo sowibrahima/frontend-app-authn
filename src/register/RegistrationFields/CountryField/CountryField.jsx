@@ -2,8 +2,6 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { FormAutosuggest, FormAutosuggestOption, FormControlFeedback } from '@openedx/paragon';
-import classNames from 'classnames';
 import PropTypes from 'prop-types';
 
 import validateCountryField, { COUNTRY_CODE_KEY, COUNTRY_DISPLAY_KEY } from './validator';
@@ -103,30 +101,43 @@ const CountryField = (props) => {
   ));
 
   return (
-    <div className="mb-4">
-      <FormAutosuggest
-        floatingLabel={formatMessage(messages['registration.country.label'])}
-        aria-label="form autosuggest"
-        name="country"
-        value={countryFieldValue || {}}
-        className={classNames({ 'form-field-error': props.errorMessage })}
-        onFocus={(e) => handleOnFocus(e)}
-        onBlur={(e) => handleOnBlur(e)}
-        onChange={(value) => handleOnChange(value)}
-      >
-        {getCountryList()}
-      </FormAutosuggest>
-      {props.errorMessage !== '' && (
-        <FormControlFeedback
-          key="error"
-          className="form-text-size"
-          hasIcon={false}
-          feedback-for="country"
-          type="invalid"
+    <div className="mb-5 relative">
+      <label htmlFor="country" className="block wuti-label mb-1.5">
+        {formatMessage(messages['registration.country.label'])}
+      </label>
+
+      <div className="relative">
+        <select
+          id="country"
+          name="country"
+          value={countryFieldValue?.selectionId || ''}
+          onChange={(e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            handleOnChange({
+              selectionId: e.target.value,
+              userProvidedText: selectedOption.text,
+            });
+          }}
+          onFocus={handleOnFocus}
+          onBlur={handleOnBlur}
+          className={`wuti-input appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%207l5%205%205-5%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_1rem_center] cursor-pointer ${props.errorMessage ? 'wuti-input-error' : ''}`}
         >
+          <option value="" disabled>Sélectionner un pays</option>
+          {Array.from(new Map(countryList.map(item => [item[COUNTRY_CODE_KEY], item])).values()).map((country) => (
+            <option key={`country-opt-${country[COUNTRY_CODE_KEY]}`} value={country[COUNTRY_CODE_KEY]}>
+              {country[COUNTRY_DISPLAY_KEY]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${props.errorMessage ? 'mt-2 max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
+      >
+        <p className="text-xs font-semibold text-red-600 tracking-wide">
           {props.errorMessage}
-        </FormControlFeedback>
-      )}
+        </p>
+      </div>
     </div>
   );
 };

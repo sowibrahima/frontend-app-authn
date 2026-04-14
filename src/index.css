@@ -1,0 +1,296 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@import "tailwindcss";
+
+/* =================================================================
+   BASE RESETS
+   ================================================================= */
+
+@layer base {
+    body {
+        background-color: #FAFAF7;
+        /* neutral-bg */
+        color: #111827;
+        /* neutral-900 */
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Hide default Open edX Header and Footer for custom Auth design */
+    header,
+    footer,
+    .pgn__header,
+    .pgn__footer {
+        display: none;
+    }
+}
+
+/* =================================================================
+   AUTH CARD
+   Matches Auth.tsx: rounded-[2.5rem] shadow-2xl shadow-brand/5
+   border border-neutral-100
+   ================================================================= */
+.wuti-auth-card {
+    background-color: #ffffff;
+    border-radius: 2.5rem;
+    box-shadow: 0 25px 50px -12px rgba(89, 13, 34, 0.05);
+    border: 1px solid #f3f4f6;
+}
+
+/* =================================================================
+   FORM INPUTS
+   Matches Auth.tsx: px-4 py-3 bg-neutral-50 border border-neutral-200
+   rounded-xl focus:border-brand focus:ring-1 focus:ring-brand
+   ================================================================= */
+.wuti-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: #fafaf8;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    /* rounded-xl = 24px in config */
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #111827;
+    outline: none;
+    transition: all 150ms ease;
+    box-sizing: border-box;
+}
+
+.wuti-input::placeholder {
+    color: #9ca3af;
+    font-family: 'Inter', sans-serif;
+}
+
+.wuti-input:focus {
+    border-color: #590D22;
+    box-shadow: 0 0 0 1px #590D22;
+}
+
+.wuti-input-error {
+    border-color: #ef4444;
+}
+
+.wuti-input-error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 1px #ef4444;
+}
+
+/* Password input dot sizing */
+.wuti-input-password {
+    font-size: 20px;
+    letter-spacing: 0.1em;
+    padding-right: 3rem !important;
+    /* Ensure space for the eye icon */
+}
+
+.wuti-input-password::placeholder {
+    font-size: 14px;
+    letter-spacing: normal;
+    color: #d1d5db;
+}
+
+/* =================================================================
+   PRIMARY BUTTON (Gold CTA)
+   Matches Auth.tsx: py-4 px-4 rounded-full bg-action-gold
+   text-sm font-bold text-neutral-900
+   ================================================================= */
+.wuti-btn-primary {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    background-color: #FFBA08;
+    color: #111827;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    /* rounded-full */
+    cursor: pointer;
+    transition: all 300ms ease;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    line-height: 1.5;
+}
+
+.wuti-btn-primary:not(:disabled):hover {
+    background-color: #E5A707;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.wuti-btn-primary:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+}
+
+/* =================================================================
+   TYPOGRAPHY & LINKS
+   ================================================================= */
+
+/* Brand colored text (burgundy #590D22) */
+.wuti-text-brand {
+    color: #590D22;
+}
+
+.wuti-text-brand:hover {
+    color: rgba(89, 13, 34, 0.8);
+}
+
+/* Brand colored interactive links */
+.wuti-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #590D22;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: all 150ms ease;
+    cursor: pointer;
+}
+
+.wuti-link:hover {
+    color: rgba(89, 13, 34, 0.8);
+    text-decoration: underline;
+    text-decoration-color: rgba(89, 13, 34, 0.8);
+    text-underline-offset: 4px;
+}
+
+/* Footer links — underlined, muted */
+.wuti-link-muted {
+    color: #6B7280;
+    text-decoration: underline;
+    text-decoration-color: #d1d5db;
+    text-underline-offset: 2px;
+}
+
+.wuti-link-muted:hover {
+    color: #590D22;
+    text-decoration-color: #590D22;
+}
+
+/* =================================================================
+   DIVIDER LINE ("Ou continuer avec")
+   ================================================================= */
+.wuti-divider {
+    position: relative;
+    margin-top: 2rem;
+}
+
+.wuti-divider-line {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #f3f4f6;
+    margin: 0;
+}
+
+.wuti-divider-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff;
+    padding: 0 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+}
+
+/* =================================================================
+   FOOTER TEXT
+   ================================================================= */
+.wuti-footer-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #6B7280;
+    line-height: 1.6;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* =================================================================
+   LABEL STYLING
+   Matches Auth.tsx: text-sm font-bold text-neutral-700
+   ================================================================= */
+.wuti-label {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+/* =================================================================
+   TAILWIND COMPONENT LAYER EXPORT
+   Rewriting apply directives to fix standard lint errors
+   ================================================================= */
+@layer components {
+    .btn-magnetic {
+        position: relative;
+        overflow: hidden;
+        transition-property: transform;
+        transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        /* ease-magnetic */
+        transition-duration: 300ms;
+        border-radius: 9999px;
+        will-change: transform;
+    }
+
+    .btn-magnetic:hover {
+        transform: scale(1.03);
+    }
+
+    .btn-magnetic:active {
+        transform: scale(0.95);
+        transition-duration: 150ms;
+    }
+
+    .card-magnetic {
+        position: relative;
+        overflow: hidden;
+        transition-property: transform;
+        transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        /* ease-magnetic */
+        transition-duration: 300ms;
+        background-color: white;
+        border-radius: 3rem;
+        /* 3xl */
+        box-shadow: 0 25px 50px -12px rgba(89, 13, 34, 0.05);
+        /* shadow-premium */
+        will-change: transform;
+    }
+
+    .card-magnetic:hover {
+        transform: scale(1.03);
+    }
+
+    .btn-slide-layer {
+        position: absolute;
+        inset: 0;
+        background-color: rgba(255, 255, 255, 0.2);
+        transform: translateX(-110%) skewX(-20deg);
+        transition-property: transform;
+        transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        /* ease-magnetic */
+        transition-duration: 500ms;
+        pointer-events: none;
+    }
+
+    .btn-magnetic:hover .btn-slide-layer {
+        transform: translateX(110%) skewX(-20deg);
+    }
+}
