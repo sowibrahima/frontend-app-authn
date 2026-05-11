@@ -31,6 +31,7 @@ const configuration = {
   GENERAL_RECOMMENDATIONS: process.env.GENERAL_RECOMMENDATIONS || '[]',
   // Miscellaneous
   INFO_EMAIL: process.env.INFO_EMAIL || '',
+  DEFAULT_LANGUAGE: process.env.DEFAULT_LANGUAGE || '',
   ZENDESK_KEY: process.env.ZENDESK_KEY,
   ZENDESK_LOGO_URL: process.env.ZENDESK_LOGO_URL,
   ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID || '',

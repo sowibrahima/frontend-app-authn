@@ -15,7 +15,6 @@ import {
   Form,
   Hyperlink,
   Spinner,
-  StatefulButton,
 } from '@openedx/paragon';
 import { Error } from '@openedx/paragon/icons';
 import PropTypes from 'prop-types';
@@ -25,7 +24,6 @@ import { useLocation } from 'react-router-dom';
 import { saveUserProfile } from './data/actions';
 import { welcomePageContextSelector } from './data/selectors';
 import messages from './messages';
-import ProgressiveProfilingPageModal from './ProgressiveProfilingPageModal';
 import BaseContainer from '../base-container';
 import { RedirectLogistration } from '../common-components';
 import { getThirdPartyAuthContext } from '../common-components/data/actions';
@@ -62,7 +60,7 @@ const ProgressiveProfiling = (props) => {
   const [registrationResult, setRegistrationResult] = useState({ redirectUrl: '' });
   const [formFieldData, setFormFieldData] = useState({ fields: {}, extendedProfile: [] });
   const [values, setValues] = useState({});
-  const [showModal, setShowModal] = useState(false);
+  const [activeFieldIndex, setActiveFieldIndex] = useState(0);
   const [showRecommendationsPage, setShowRecommendationsPage] = useState(false);
 
   useEffect(() => {
@@ -136,14 +134,14 @@ const ProgressiveProfiling = (props) => {
     return null;
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e, submittedValues = values) => {
     e.preventDefault();
     window.history.replaceState(location.state, null, '');
-    const payload = { ...values, extendedProfile: [] };
+    const payload = { ...submittedValues, extendedProfile: [] };
     if (Object.keys(formFieldData.extendedProfile).length > 0) {
       formFieldData.extendedProfile.forEach(fieldName => {
-        if (values[fieldName]) {
-          payload.extendedProfile.push({ fieldName, fieldValue: values[fieldName] });
+        if (submittedValues[fieldName]) {
+          payload.extendedProfile.push({ fieldName, fieldValue: submittedValues[fieldName] });
         }
         delete payload[fieldName];
       });
@@ -165,13 +163,22 @@ const ProgressiveProfiling = (props) => {
   const handleSkip = (e) => {
     e.preventDefault();
     window.history.replaceState(location.state, null, '');
-    setShowModal(true);
+    const nextValues = { ...values };
+    if (activeFieldData?.name) {
+      delete nextValues[activeFieldData.name];
+    }
+    setValues(nextValues);
     sendTrackEvent(
       'edx.bi.welcome.page.skip.link.clicked',
       {
         host: queryParams?.host || '',
       },
     );
+    if (!isLastField) {
+      setActiveFieldIndex(prevIndex => Math.min(prevIndex + 1, fieldSteps.length - 1));
+      return;
+    }
+    handleSubmit(e, nextValues);
   };
 
   const onChangeHandler = (e) => {
@@ -182,18 +189,30 @@ const ProgressiveProfiling = (props) => {
     }
   };
 
-  const formFields = Object.keys(formFieldData.fields).map((fieldName) => {
-    const fieldData = formFieldData.fields[fieldName];
-    return (
-      <span key={fieldData.name}>
-        <FormFieldRenderer
-          fieldData={fieldData}
-          value={values[fieldData.name]}
-          onChangeHandler={onChangeHandler}
-        />
-      </span>
-    );
-  });
+  const fieldSteps = Object.keys(formFieldData.fields).map(fieldName => formFieldData.fields[fieldName]);
+  const boundedFieldIndex = Math.min(activeFieldIndex, Math.max(fieldSteps.length - 1, 0));
+  const activeFieldData = fieldSteps[boundedFieldIndex];
+  const isLastField = boundedFieldIndex >= fieldSteps.length - 1;
+  const progressPercent = fieldSteps.length ? ((boundedFieldIndex + 1) / fieldSteps.length) * 100 : 0;
+  const finalPrimaryButtonLabel = showRecommendationsPage
+    ? formatMessage(messages['optional.fields.next.button'])
+    : formatMessage(messages['optional.fields.submit.button']);
+  const primaryButtonLabel = isLastField
+    ? finalPrimaryButtonLabel
+    : formatMessage(messages['optional.fields.next.button']);
+
+  const handlePrimaryAction = (e) => {
+    e.preventDefault();
+    if (!isLastField) {
+      setActiveFieldIndex(prevIndex => Math.min(prevIndex + 1, fieldSteps.length - 1));
+      return;
+    }
+    handleSubmit(e);
+  };
+
+  const handlePreviousQuestion = () => {
+    setActiveFieldIndex(prevIndex => Math.max(prevIndex - 1, 0));
+  };
 
   return (
     <BaseContainer showWelcomeBanner fullName={authenticatedUser?.fullName || authenticatedUser?.name}>
@@ -202,7 +221,6 @@ const ProgressiveProfiling = (props) => {
           { siteName: getConfig().SITE_NAME })}
         </title>
       </Helmet>
-      <ProgressiveProfilingPageModal isOpen={showModal} redirectUrl={registrationResult.redirectUrl} />
       {(props.shouldRedirect && welcomePageContext.nextUrl) && (
         <RedirectLogistration
           success
@@ -218,7 +236,7 @@ const ProgressiveProfiling = (props) => {
           userId={authenticatedUser?.userId}
         />
       )}
-      <div className="mw-xs m-4 pp-page-content">
+      <div className="mw-xs m-4 pp-page-content wuti-auth-card p-5 sm:p-6">
         {registrationEmbedded && welcomePageContextApiStatus === PENDING_STATE ? (
           <Spinner animation="border" variant="primary" id="tpa-spinner" />
         ) : (
@@ -232,8 +250,34 @@ const ProgressiveProfiling = (props) => {
                 <p>{formatMessage(messages['welcome.page.error.message'])}</p>
               </Alert>
             ) : null}
-            <Form>
-              {formFields}
+            <Form onSubmit={handlePrimaryAction}>
+              <div className="pp-page__wizard">
+                {fieldSteps.length > 1 && (
+                  <div className="pp-page__progress" aria-hidden="true">
+                    <div className="pp-page__progress-track">
+                      <div
+                        className="pp-page__progress-bar"
+                        style={{ transform: `scaleX(${progressPercent / 100})` }}
+                      />
+                    </div>
+                    <span className="pp-page__progress-count">
+                      {formatMessage(messages['optional.fields.progress.label'], {
+                        current: boundedFieldIndex + 1,
+                        total: fieldSteps.length,
+                      })}
+                    </span>
+                  </div>
+                )}
+                {activeFieldData && (
+                  <div className="pp-page__field-step" key={activeFieldData.name}>
+                    <FormFieldRenderer
+                      fieldData={activeFieldData}
+                      value={values[activeFieldData.name]}
+                      onChangeHandler={onChangeHandler}
+                    />
+                  </div>
+                )}
+              </div>
               {(getConfig().AUTHN_PROGRESSIVE_PROFILING_SUPPORT_LINK) && (
                 <span className="pp-page__support-link">
                   <Hyperlink
@@ -248,29 +292,31 @@ const ProgressiveProfiling = (props) => {
                   </Hyperlink>
                 </span>
               )}
-              <div className="d-flex mt-4 mb-3">
-                <StatefulButton
+              <div className="pp-page__actions">
+                {boundedFieldIndex > 0 && (
+                  <button
+                    className="pp-page__secondary-button"
+                    type="button"
+                    onClick={handlePreviousQuestion}
+                  >
+                    {formatMessage(messages['optional.fields.previous.question.button'])}
+                  </button>
+                )}
+                <button
+                  id="pp-submit"
                   type="submit"
-                  variant="brand"
-                  className="pp-page__button-width"
-                  state={submitState}
-                  labels={{
-                    default: showRecommendationsPage ? formatMessage(messages['optional.fields.next.button']) : formatMessage(messages['optional.fields.submit.button']),
-                    pending: '',
-                  }}
-                  onClick={handleSubmit}
-                  onMouseDown={(e) => e.preventDefault()}
-                />
-                <StatefulButton
-                  className="text-gray-700 font-weight-500"
-                  type="submit"
-                  variant="link"
-                  labels={{
-                    default: formatMessage(messages['optional.fields.skip.button']),
-                  }}
+                  className="wuti-btn-primary pp-page__primary-button"
+                  disabled={submitState === PENDING_STATE}
+                >
+                  {submitState === PENDING_STATE ? '' : primaryButtonLabel}
+                </button>
+                <button
+                  className="pp-page__skip-button"
+                  type="button"
                   onClick={handleSkip}
-                  onMouseDown={(e) => e.preventDefault()}
-                />
+                >
+                  {formatMessage(messages['optional.fields.skip.button'])}
+                </button>
               </div>
             </Form>
           </>

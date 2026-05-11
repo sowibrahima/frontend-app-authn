@@ -31,6 +31,11 @@ const messages = defineMessages({
     defaultMessage: 'Submit',
     description: 'Submit button text for the forgot password page.',
   },
+  'forgot.password.submit.pending': {
+    id: 'forgot.password.submit.pending',
+    defaultMessage: 'Processing...',
+    description: 'Forgot password submit button text while the request is pending.',
+  },
   'forgot.password.error.alert.title': {
     id: 'forgot.password.error.alert.title.',
     defaultMessage: 'We were unable to contact you.',

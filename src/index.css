@@ -2,16 +2,34 @@
 
 @import "tailwindcss";
 
+:root {
+    --wuti-color-brand: #590D22;
+    --wuti-color-action: #FFBA08;
+    --wuti-color-action-hover: #E5A707;
+    --wuti-color-neutral-bg: #FAFAF7;
+    --wuti-color-surface: #ffffff;
+    --wuti-color-surface-muted: #f3f4f6;
+    --wuti-color-input-bg: #fafaf8;
+    --wuti-color-border: #e5e7eb;
+    --wuti-color-text: #111827;
+    --wuti-color-text-muted: #6B7280;
+    --wuti-color-text-subtle: #9ca3af;
+    --wuti-color-label: #374151;
+    --wuti-color-danger: #ef4444;
+}
+
 /* =================================================================
    BASE RESETS
    ================================================================= */
 
 @layer base {
+    html {
+        scrollbar-gutter: stable both-edges;
+    }
+
     body {
-        background-color: #FAFAF7;
-        /* neutral-bg */
-        color: #111827;
-        /* neutral-900 */
+        background-color: var(--wuti-color-neutral-bg);
+        color: var(--wuti-color-text);
         font-family: 'Inter', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -34,10 +52,10 @@
    border border-neutral-100
    ================================================================= */
 .wuti-auth-card {
-    background-color: #ffffff;
+    background-color: var(--wuti-color-surface);
     border-radius: 2.5rem;
     box-shadow: 0 25px 50px -12px rgba(89, 13, 34, 0.05);
-    border: 1px solid #f3f4f6;
+    border: 1px solid var(--wuti-color-surface-muted);
 }
 
 /* =================================================================
@@ -48,36 +66,36 @@
 .wuti-input {
     width: 100%;
     padding: 0.75rem 1rem;
-    background-color: #fafaf8;
-    border: 1px solid #e5e7eb;
+    background-color: var(--wuti-color-input-bg);
+    border: 1px solid var(--wuti-color-border);
     border-radius: 24px;
     /* rounded-xl = 24px in config */
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     line-height: 1.5;
-    color: #111827;
+    color: var(--wuti-color-text);
     outline: none;
     transition: all 150ms ease;
     box-sizing: border-box;
 }
 
 .wuti-input::placeholder {
-    color: #9ca3af;
+    color: var(--wuti-color-text-subtle);
     font-family: 'Inter', sans-serif;
 }
 
 .wuti-input:focus {
-    border-color: #590D22;
-    box-shadow: 0 0 0 1px #590D22;
+    border-color: var(--wuti-color-brand);
+    box-shadow: 0 0 0 1px var(--wuti-color-brand);
 }
 
 .wuti-input-error {
-    border-color: #ef4444;
+    border-color: var(--wuti-color-danger);
 }
 
 .wuti-input-error:focus {
-    border-color: #ef4444;
-    box-shadow: 0 0 0 1px #ef4444;
+    border-color: var(--wuti-color-danger);
+    box-shadow: 0 0 0 1px var(--wuti-color-danger);
 }
 
 /* Password input dot sizing */
@@ -91,7 +109,68 @@
 .wuti-input-password::placeholder {
     font-size: 14px;
     letter-spacing: normal;
-    color: #d1d5db;
+    color: var(--wuti-color-border);
+}
+
+/* =================================================================
+   ADDITIONAL REGISTRATION FIELDS WIZARD
+   ================================================================= */
+.wuti-extra-fields-wizard {
+    position: relative;
+}
+
+.wuti-extra-fields-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.wuti-extra-fields-progress__track {
+    flex: 1;
+    height: 0.375rem;
+    overflow: hidden;
+    border-radius: 9999px;
+    background-color: var(--wuti-color-surface-muted);
+}
+
+.wuti-extra-fields-progress__bar {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--wuti-color-brand);
+    transform-origin: left center;
+    transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wuti-extra-fields-progress__count {
+    flex: 0 0 auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--wuti-color-text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.wuti-extra-fields-step {
+    animation: wuti-field-enter 360ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+}
+
+.wuti-extra-fields-step .mb-5 {
+    margin-bottom: 0;
+}
+
+@keyframes wuti-field-enter {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* =================================================================
@@ -105,8 +184,8 @@
     justify-content: center;
     align-items: center;
     padding: 1rem;
-    background-color: #FFBA08;
-    color: #111827;
+    background-color: var(--wuti-color-action);
+    color: var(--wuti-color-text);
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 700;
@@ -122,7 +201,7 @@
 }
 
 .wuti-btn-primary:not(:disabled):hover {
-    background-color: #E5A707;
+    background-color: var(--wuti-color-action-hover);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     transform: translateY(-2px);
 }
@@ -138,7 +217,7 @@
 
 /* Brand colored text (burgundy #590D22) */
 .wuti-text-brand {
-    color: #590D22;
+    color: var(--wuti-color-brand);
 }
 
 .wuti-text-brand:hover {
@@ -150,7 +229,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     font-weight: 700;
-    color: #590D22;
+    color: var(--wuti-color-brand);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     text-decoration: none;
@@ -167,19 +246,19 @@
 
 /* Footer links — underlined, muted */
 .wuti-link-muted {
-    color: #6B7280;
+    color: var(--wuti-color-text-muted);
     text-decoration: underline;
-    text-decoration-color: #d1d5db;
+    text-decoration-color: var(--wuti-color-border);
     text-underline-offset: 2px;
 }
 
 .wuti-link-muted:hover {
-    color: #590D22;
-    text-decoration-color: #590D22;
+    color: var(--wuti-color-brand);
+    text-decoration-color: var(--wuti-color-brand);
 }
 
 /* =================================================================
-   DIVIDER LINE ("Ou continuer avec")
+   DIVIDER LINE ("Or continue with")
    ================================================================= */
 .wuti-divider {
     position: relative;
@@ -198,12 +277,12 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #ffffff;
+    background-color: var(--wuti-color-surface);
     padding: 0 1rem;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     font-weight: 700;
-    color: #9ca3af;
+    color: var(--wuti-color-text-subtle);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     white-space: nowrap;
@@ -215,7 +294,7 @@
 .wuti-footer-text {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    color: #6B7280;
+    color: var(--wuti-color-text-muted);
     line-height: 1.6;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -230,7 +309,7 @@
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 700;
-    color: #374151;
+    color: var(--wuti-color-label);
     margin-bottom: 0.5rem;
 }
 

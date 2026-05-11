@@ -2,8 +2,6 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { Button, Icon, IconButton } from '@openedx/paragon';
-import { Close } from '@openedx/paragon/icons';
 import PropTypes from 'prop-types';
 
 import validateUsername from './validator';
@@ -105,10 +103,9 @@ const UsernameField = (props) => {
       <span className="text-gray username-suggestion--label">{formatMessage(messages['registration.username.suggestion.label'])}</span>
       <div className="username-scroll-suggested--form-field">
         {usernameSuggestions.map((username, index) => (
-          <Button
+          <button
             type="button"
             name="username"
-            variant="outline-dark"
             className="username-suggestions--chip data-hj-suppress"
             autoComplete={props.autoComplete}
             key={`suggestion-${index.toString()}`}
@@ -117,7 +114,7 @@ const UsernameField = (props) => {
             role="option"
           >
             {username}
-          </Button>
+          </button>
         ))}
       </div>
       {iconButton}
@@ -126,24 +123,50 @@ const UsernameField = (props) => {
 
   if (usernameSuggestions.length > 0 && errorMessage && value === ' ') {
     className = 'username-suggestions';
-    iconButton = <IconButton src={Close} iconAs={Icon} alt="Close" onClick={() => handleUsernameSuggestionClose()} variant="black" size="sm" className="username-suggestions__close__button" />;
+    iconButton = (
+      <button
+        type="button"
+        aria-label={formatMessage(messages['registration.username.suggestion.close'])}
+        onClick={() => handleUsernameSuggestionClose()}
+        className="username-suggestions__close__button"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      </button>
+    );
     suggestedUsernameDiv = suggestedUsernames();
   } else if (usernameSuggestions.length > 0 && value === ' ') {
-    className = 'username-suggestions d-flex align-items-center';
-    iconButton = <IconButton src={Close} iconAs={Icon} alt="Close" onClick={() => handleUsernameSuggestionClose()} variant="black" size="sm" className="username-suggestions__close__button" />;
+    className = 'username-suggestions';
+    iconButton = (
+      <button
+        type="button"
+        aria-label={formatMessage(messages['registration.username.suggestion.close'])}
+        onClick={() => handleUsernameSuggestionClose()}
+        className="username-suggestions__close__button"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      </button>
+    );
     suggestedUsernameDiv = suggestedUsernames();
   } else if (usernameSuggestions.length > 0 && errorMessage) {
+    className = 'username-suggestions';
     suggestedUsernameDiv = suggestedUsernames();
   }
   return (
     <div className="username__form-group-wrapper">
-      {suggestedUsernameDiv}
       <FormGroup
         {...props}
         handleChange={handleOnChange}
         handleFocus={handleOnFocus}
         handleBlur={handleOnBlur}
-      />
+      >
+        {suggestedUsernameDiv}
+      </FormGroup>
     </div>
   );
 };

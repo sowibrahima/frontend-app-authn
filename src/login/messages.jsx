@@ -27,6 +27,56 @@ const messages = defineMessages({
     defaultMessage: 'Forgot password',
     description: 'Button text for forgot password',
   },
+  'login.welcome.heading': {
+    id: 'login.welcome.heading',
+    defaultMessage: 'Welcome back!',
+    description: 'Heading on the WutiSkill login form.',
+  },
+  'login.welcome.subtitle': {
+    id: 'login.welcome.subtitle',
+    defaultMessage: 'Sign in to access your courses.',
+    description: 'Subtitle on the WutiSkill login form.',
+  },
+  'login.user.identity.placeholder': {
+    id: 'login.user.identity.placeholder',
+    defaultMessage: 'first.last@example.com',
+    description: 'Placeholder for the login email or username field.',
+  },
+  'login.submit.pending': {
+    id: 'login.submit.pending',
+    defaultMessage: 'Signing in...',
+    description: 'Login submit button text while the request is pending.',
+  },
+  'login.continue.with': {
+    id: 'login.continue.with',
+    defaultMessage: 'Or continue with',
+    description: 'Divider text before third-party authentication options.',
+  },
+  'login.no.account.prompt': {
+    id: 'login.no.account.prompt',
+    defaultMessage: 'Don\'t have an account?',
+    description: 'Prompt shown before the registration link on the login page.',
+  },
+  'login.register.link': {
+    id: 'login.register.link',
+    defaultMessage: 'Register',
+    description: 'Registration link text on the login page.',
+  },
+  'login.terms.link': {
+    id: 'login.terms.link',
+    defaultMessage: 'Terms of Service',
+    description: 'Terms of service link text in the login legal notice.',
+  },
+  'login.privacy.link': {
+    id: 'login.privacy.link',
+    defaultMessage: 'Privacy Policy',
+    description: 'Privacy policy link text in the login legal notice.',
+  },
+  'login.legal.notice': {
+    id: 'login.legal.notice',
+    defaultMessage: 'By continuing, you agree to our {termsLink} and our {privacyLink}.',
+    description: 'Legal notice displayed below the login form.',
+  },
   'institution.login.button': {
     id: 'institution.login.button',
     defaultMessage: 'Institution/campus credentials',
@@ -65,12 +115,12 @@ const messages = defineMessages({
     description: 'Validation message that appears when username or email address is less than 2 characters',
   },
   'email.validation.message': {
-    id: 'email.validation.message',
+    id: 'login.email.validation.message',
     defaultMessage: 'Enter your username or email',
     description: 'Validation message that appears when email is empty',
   },
   'password.validation.message': {
-    id: 'password.validation.message',
+    id: 'login.password.validation.message',
     defaultMessage: 'Enter your password',
     description: 'Validation message that appears when password is empty',
   },

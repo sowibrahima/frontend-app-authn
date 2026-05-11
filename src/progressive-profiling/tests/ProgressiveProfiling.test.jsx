@@ -106,7 +106,7 @@ describe('ProgressiveProfilingTests', () => {
     getAuthenticatedUser.mockReturnValue({ userId: 3, username: 'abc123', name: 'Test User' });
   });
 
-  // ******** test form links and modal ********
+  // ******** test form links and skip behavior ********
 
   it('should not display button "Learn more about how we use this information."', () => {
     mergeConfig({
@@ -130,7 +130,7 @@ describe('ProgressiveProfilingTests', () => {
     expect(learnMoreButton).toBeDefined();
   });
 
-  it('should open modal on pressing skip for now button', () => {
+  it('should skip the current question and advance to the next one', () => {
     delete window.location;
     window.location = { href: getConfig().BASE_URL.concat(AUTHN_PROGRESSIVE_PROFILING) };
     const { getByRole } = render(reduxWrapper(<ProgressiveProfiling />));
@@ -138,9 +138,7 @@ describe('ProgressiveProfilingTests', () => {
     const skipButton = getByRole('button', { name: /skip for now/i });
     fireEvent.click(skipButton);
 
-    const modalContentContainer = document.getElementsByClassName('.pgn__modal-content-container');
-
-    expect(modalContentContainer).toBeTruthy();
+    expect(screen.getByLabelText('Gender')).toBeDefined();
 
     expect(sendTrackEvent).toHaveBeenCalledWith('edx.bi.welcome.page.skip.link.clicked', { host: '' });
   });
@@ -180,6 +178,7 @@ describe('ProgressiveProfilingTests', () => {
 
     const nextButton = screen.getByText('Next');
     fireEvent.click(nextButton);
+    fireEvent.click(screen.getByText('Next'));
 
     expect(sendTrackEvent).toHaveBeenCalledWith('edx.bi.welcome.page.submit.clicked', expectedEventProperties);
   });
@@ -194,11 +193,12 @@ describe('ProgressiveProfilingTests', () => {
     store.dispatch = jest.fn(store.dispatch);
     const { getByLabelText, getByText } = render(reduxWrapper(<ProgressiveProfiling />));
 
-    const genderSelect = getByLabelText('Gender');
     const companyInput = getByLabelText('Company');
-
-    fireEvent.change(genderSelect, { target: { value: 'm' } });
     fireEvent.change(companyInput, { target: { value: 'test company' } });
+    fireEvent.click(getByText('Next'));
+
+    const genderSelect = getByLabelText('Gender');
+    fireEvent.change(genderSelect, { target: { value: 'm' } });
 
     fireEvent.click(getByText('Next'));
 
@@ -248,9 +248,8 @@ describe('ProgressiveProfilingTests', () => {
           success: true,
         },
       });
-      const { container } = render(reduxWrapper(<ProgressiveProfiling />));
-      const nextButton = container.querySelector('button.btn-brand');
-      expect(nextButton.textContent).toEqual('Next');
+      render(reduxWrapper(<ProgressiveProfiling />));
+      expect(screen.getByRole('button', { name: 'Next' })).toBeDefined();
 
       expect(mockNavigate).toHaveBeenCalledWith(RECOMMENDATIONS);
     });
@@ -275,9 +274,8 @@ describe('ProgressiveProfilingTests', () => {
         },
       });
 
-      const { container } = render(reduxWrapper(<ProgressiveProfiling />));
-      const nextButton = container.querySelector('button.btn-brand');
-      expect(nextButton.textContent).toEqual('Submit');
+      render(reduxWrapper(<ProgressiveProfiling />));
+      expect(screen.getByRole('button', { name: 'Next' })).toBeDefined();
 
       expect(window.location.href).toEqual(redirectUrl);
     });
@@ -356,6 +354,7 @@ describe('ProgressiveProfilingTests', () => {
       render(reduxWrapper(<ProgressiveProfiling />));
       const submitButton = screen.getByText('Next');
       fireEvent.click(submitButton);
+      fireEvent.click(screen.getByText('Next'));
 
       expect(sendTrackEvent).toHaveBeenCalledWith('edx.bi.welcome.page.submit.clicked', expectedEventProperties);
     });
@@ -370,8 +369,11 @@ describe('ProgressiveProfilingTests', () => {
 
       const { container } = render(reduxWrapper(<ProgressiveProfiling />));
 
-      const genderField = container.querySelector('#gender');
-      expect(genderField).toBeTruthy();
+      const companyField = container.querySelector('#company');
+      expect(companyField).toBeTruthy();
+
+      fireEvent.click(screen.getByText('Next'));
+      expect(container.querySelector('#gender')).toBeTruthy();
     });
 
     it('should redirect to dashboard if API call to get form field fails', () => {
@@ -418,8 +420,8 @@ describe('ProgressiveProfilingTests', () => {
       });
 
       render(reduxWrapper(<ProgressiveProfiling />));
-      const submitButton = screen.getByText('Submit');
-      fireEvent.click(submitButton);
+      fireEvent.click(screen.getByText('Next'));
+      fireEvent.click(screen.getByText('Submit'));
       expect(window.location.href).toBe(redirectUrl);
     });
   });

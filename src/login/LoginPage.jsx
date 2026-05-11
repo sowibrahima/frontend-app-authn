@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { getConfig } from '@edx/frontend-platform';
 import { sendPageEvent, sendTrackEvent } from '@edx/frontend-platform/analytics';
-import { useIntl } from '@edx/frontend-platform/i18n';
+import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import gsap from 'gsap';
 import { ArrowRight, Award } from 'lucide-react';
 import PropTypes from 'prop-types';
@@ -24,6 +24,7 @@ import { thirdPartyAuthContextSelector } from '../common-components/data/selecto
 import EnterpriseSSO from '../common-components/EnterpriseSSO';
 import ThirdPartyAuth from '../common-components/ThirdPartyAuth';
 import { PENDING_STATE, REGISTER_PAGE, RESET_PAGE } from '../data/constants';
+import { getLegalUrls } from '../data/legalUrls';
 import {
   getActivationStatus,
   getAllPossibleQueryParams,
@@ -77,6 +78,7 @@ const LoginPage = ({
   const { formatMessage } = useIntl();
   const activationMsgType = getActivationStatus();
   const queryParams = useMemo(() => getAllPossibleQueryParams(), []);
+  const legalUrls = useMemo(() => getLegalUrls(), []);
 
   const [formFields, setFormFields] = useState({ ...backedUpFormData.formFields });
   const [errorCode, setErrorCode] = useState({
@@ -296,25 +298,28 @@ const LoginPage = ({
           <div className="wuti-auth-card px-8 py-10">
             <div className="text-center mb-8">
               <h2 className="auth-element text-3xl font-bold text-neutral-900 tracking-tight mb-2">
-                Bon retour !
+                {formatMessage(messages['login.welcome.heading'])}
               </h2>
               <p className="auth-element text-sm font-mono text-neutral-500">
-                Connectez-vous pour accéder à vos formations.
+                {formatMessage(messages['login.welcome.subtitle'])}
               </p>
             </div>
 
             <form className="space-y-6" id="sign-in-form" name="sign-in-form" onSubmit={handleSubmit}>
               {/* Email field */}
               <div className="auth-element space-y-2">
-                <label className="wuti-label">Adresse e-mail</label>
+                <label htmlFor="emailOrUsername" className="wuti-label">
+                  {formatMessage(messages['login.user.identity.label'])}
+                </label>
                 <input
+                  id="emailOrUsername"
                   type="text"
                   name="emailOrUsername"
                   value={formFields.emailOrUsername}
                   autoComplete="on"
                   onChange={handleOnChange}
                   onFocus={handleOnFocus}
-                  placeholder="prénom.nom@exemple.com"
+                  placeholder={formatMessage(messages['login.user.identity.placeholder'])}
                   className={`wuti-input ${errors.emailOrUsername ? 'wuti-input-error' : ''}`}
                 />
                 {errors.emailOrUsername && <span className="text-xs text-red-500 mt-1 block">{errors.emailOrUsername}</span>}
@@ -323,7 +328,9 @@ const LoginPage = ({
               {/* Password field */}
               <div className="auth-element space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="wuti-label mb-0">Mot de passe</label>
+                  <label htmlFor="password" className="wuti-label mb-0">
+                    {formatMessage(messages['login.password.label'])}
+                  </label>
                   <Link
                     id="forgot-password"
                     name="forgot-password"
@@ -331,10 +338,11 @@ const LoginPage = ({
                     onClick={trackForgotPasswordLinkClick}
                     className="wuti-link"
                   >
-                    Oublié ?
+                    {formatMessage(messages['forgot.password'])}
                   </Link>
                 </div>
                 <input
+                  id="password"
                   type="password"
                   name="password"
                   value={formFields.password}
@@ -358,7 +366,9 @@ const LoginPage = ({
                   className="wuti-btn-primary"
                 >
                   <span className="relative z-10 flex items-center gap-2">
-                    {submitState === PENDING_STATE ? 'Connexion en cours...' : 'Se connecter'}
+                    {submitState === PENDING_STATE
+                      ? formatMessage(messages['login.submit.pending'])
+                      : formatMessage(messages['sign.in.button'])}
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                   </span>
                 </button>
@@ -368,7 +378,7 @@ const LoginPage = ({
             {/* Divider */}
             <div className="auth-element wuti-divider">
               <hr className="wuti-divider-line" />
-              <span className="wuti-divider-text">Ou continuer avec</span>
+              <span className="wuti-divider-text">{formatMessage(messages['login.continue.with'])}</span>
             </div>
 
             {/* Third party auth */}
@@ -384,12 +394,14 @@ const LoginPage = ({
             </div>
 
             <p className="auth-element mt-10 text-center text-sm text-neutral-500 font-medium">
-              Vous n'avez pas de compte ?&nbsp;
+              {formatMessage(messages['login.no.account.prompt'])}
+              {' '}
               <button
+                type="button"
                 onClick={() => navigate(updatePathWithQueryParams(REGISTER_PAGE))}
                 className="wuti-link bg-transparent border-none p-0 inline"
               >
-                S'inscrire
+                {formatMessage(messages['login.register.link'])}
               </button>
             </p>
           </div>
@@ -397,7 +409,23 @@ const LoginPage = ({
           {/* Footer text */}
           <div className="mt-8 text-center px-4">
             <p className="wuti-footer-text">
-              En continuant, vous acceptez nos <a href={`${getConfig().LMS_BASE_URL}/tos`} className="wuti-link-muted">Conditions d'utilisation</a><br className="hidden sm:block" /> et notre <a href={`${getConfig().LMS_BASE_URL}/privacy`} className="wuti-link-muted">Politique de confidentialité</a>.
+              <FormattedMessage
+                id="login.legal.notice"
+                defaultMessage="By continuing, you agree to our {termsLink} and our {privacyLink}."
+                description="Legal notice displayed below the login form."
+                values={{
+                  termsLink: (
+                    <a href={legalUrls.terms} className="wuti-link-muted">
+                      {formatMessage(messages['login.terms.link'])}
+                    </a>
+                  ),
+                  privacyLink: (
+                    <a href={legalUrls.privacy} className="wuti-link-muted">
+                      {formatMessage(messages['login.privacy.link'])}
+                    </a>
+                  ),
+                }}
+              />
             </p>
           </div>
         </div>

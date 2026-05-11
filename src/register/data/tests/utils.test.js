@@ -1,4 +1,9 @@
-import { isFormValid } from '../utils';
+import {
+  getAdditionalRegistrationFieldSteps,
+  getVisibleRegistrationFieldDescriptions,
+  hasAdditionalRegistrationFields,
+  isFormValid,
+} from '../utils';
 
 describe('Payload validation', () => {
   let formatMessage;
@@ -73,5 +78,51 @@ describe('Payload validation', () => {
     expect(fieldErrors.username).toBeDefined();
     expect(fieldErrors.password).toBeDefined();
     expect(isValid).toBe(false);
+  });
+});
+
+describe('Additional registration fields visibility', () => {
+  const fieldDescriptions = {
+    level_of_education: {
+      name: 'level_of_education',
+      error_message: 'Select your level of education',
+      type: 'select',
+    },
+  };
+
+  test('does not show additional step when dynamic fields are disabled and no other extra fields are enabled', () => {
+    const flags = {
+      showConfigurableRegistrationFields: false,
+      showConfigurableEdxFields: false,
+      showMarketingEmailOptInCheckbox: false,
+    };
+
+    expect(getVisibleRegistrationFieldDescriptions(fieldDescriptions, flags)).toEqual({});
+    expect(getAdditionalRegistrationFieldSteps(fieldDescriptions, flags)).toEqual([]);
+    expect(hasAdditionalRegistrationFields(fieldDescriptions, flags)).toBe(false);
+  });
+
+  test('shows additional step when dynamic registration fields are enabled', () => {
+    const flags = {
+      showConfigurableRegistrationFields: true,
+      showConfigurableEdxFields: false,
+      showMarketingEmailOptInCheckbox: false,
+    };
+
+    expect(getVisibleRegistrationFieldDescriptions(fieldDescriptions, flags)).toEqual(fieldDescriptions);
+    expect(getAdditionalRegistrationFieldSteps(fieldDescriptions, flags)).toEqual([
+      { name: 'level_of_education', type: 'field', fieldData: fieldDescriptions.level_of_education },
+    ]);
+    expect(hasAdditionalRegistrationFields(fieldDescriptions, flags)).toBe(true);
+  });
+
+  test('shows additional step when marketing opt-in is enabled without dynamic fields', () => {
+    const flags = {
+      showConfigurableRegistrationFields: false,
+      showConfigurableEdxFields: false,
+      showMarketingEmailOptInCheckbox: true,
+    };
+
+    expect(hasAdditionalRegistrationFields({}, flags)).toBe(true);
   });
 });
