@@ -16,6 +16,11 @@ const messages = defineMessages({
     defaultMessage: 'Reset password',
     description: 'The page heading and button text for reset password page.',
   },
+  'reset.password.submit.pending': {
+    id: 'reset.password.submit.pending',
+    defaultMessage: 'Processing...',
+    description: 'Reset password submit button text while the request is pending.',
+  },
   'reset.password.page.instructions': {
     id: 'reset.password.page.instructions',
     defaultMessage: 'Enter and confirm your new password.',

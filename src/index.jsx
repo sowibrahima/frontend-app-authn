@@ -4,7 +4,7 @@ import 'regenerator-runtime/runtime';
 import { StrictMode } from 'react';
 
 import {
-  APP_INIT_ERROR, APP_READY, initialize, mergeConfig, subscribe,
+  APP_INIT_ERROR, APP_READY, getConfig, initialize, mergeConfig, subscribe,
 } from '@edx/frontend-platform';
 import { ErrorPage } from '@edx/frontend-platform/react';
 import { createRoot } from 'react-dom/client';
@@ -12,6 +12,24 @@ import { createRoot } from 'react-dom/client';
 import configuration from './config';
 import messages from './i18n';
 import MainApp from './MainApp';
+
+const hasCookie = (name) => (
+  typeof document !== 'undefined'
+  && document.cookie.split(';').some((cookie) => cookie.trim().startsWith(`${name}=`))
+);
+
+const setDefaultLanguageCookie = () => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const { DEFAULT_LANGUAGE, LANGUAGE_PREFERENCE_COOKIE_NAME } = getConfig();
+  if (!DEFAULT_LANGUAGE || !LANGUAGE_PREFERENCE_COOKIE_NAME || hasCookie(LANGUAGE_PREFERENCE_COOKIE_NAME)) {
+    return;
+  }
+
+  document.cookie = `${LANGUAGE_PREFERENCE_COOKIE_NAME}=${encodeURIComponent(DEFAULT_LANGUAGE)}; path=/; SameSite=Lax`;
+};
 
 subscribe(APP_READY, () => {
   const root = createRoot(document.getElementById('root'));
@@ -38,6 +56,7 @@ initialize({
     config: () => {
       mergeConfig(configuration);
     },
+    i18n: setDefaultLanguageCookie,
   },
   messages,
 });

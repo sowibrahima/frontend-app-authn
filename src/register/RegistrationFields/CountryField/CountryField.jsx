@@ -95,12 +95,6 @@ const CountryField = (props) => {
     }
   };
 
-  const getCountryList = () => countryList.map((country) => (
-    <FormAutosuggestOption key={country[COUNTRY_DISPLAY_KEY]} id={country[COUNTRY_CODE_KEY]}>
-      {country[COUNTRY_DISPLAY_KEY]}
-    </FormAutosuggestOption>
-  ));
-
   return (
     <div className="mb-5 relative">
       <label htmlFor="country" className="block wuti-label mb-1.5">
@@ -123,7 +117,7 @@ const CountryField = (props) => {
           onBlur={handleOnBlur}
           className={`wuti-input appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%207l5%205%205-5%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_1rem_center] cursor-pointer ${props.errorMessage ? 'wuti-input-error' : ''}`}
         >
-          <option value="" disabled>Sélectionner un pays</option>
+          <option value="" disabled>{formatMessage(messages['registration.country.placeholder'])}</option>
           {Array.from(new Map(countryList.map(item => [item[COUNTRY_CODE_KEY], item])).values()).map((country) => (
             <option key={`country-opt-${country[COUNTRY_CODE_KEY]}`} value={country[COUNTRY_CODE_KEY]}>
               {country[COUNTRY_DISPLAY_KEY]}

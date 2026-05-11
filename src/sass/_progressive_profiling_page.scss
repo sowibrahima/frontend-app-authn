@@ -2,6 +2,8 @@
     min-width: 6rem;
 }
 .pp-page__support-link {
+    display: inline-flex;
+    margin-top: 1rem;
     font-size: 0.875rem;
     font-weight: 400;
 }
@@ -16,6 +18,101 @@
       font-size: 1.125rem;
     }
 }
+
+.pp-page-content {
+    max-width: 31rem;
+    width: min(100% - 2rem, 31rem);
+}
+
+.pp-page__wizard {
+    position: relative;
+}
+
+.pp-page__progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.pp-page__progress-track {
+    flex: 1;
+    height: 0.375rem;
+    overflow: hidden;
+    border-radius: 9999px;
+    background-color: var(--wuti-color-surface-muted, #f3f4f6);
+}
+
+.pp-page__progress-bar {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--wuti-color-brand, #590D22);
+    transform-origin: left center;
+    transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pp-page__progress-count {
+    flex: 0 0 auto;
+    color: var(--wuti-color-text-muted, #6B7280);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.pp-page__field-step {
+    animation: pp-field-enter 360ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+}
+
+.pp-page__field-step .mb-5 {
+    margin-bottom: 0;
+}
+
+.pp-page__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.pp-page__primary-button {
+    flex: 1 0 100%;
+    min-height: 3.5rem;
+}
+
+.pp-page__secondary-button,
+.pp-page__skip-button {
+    border: 0;
+    background: transparent;
+    color: var(--wuti-color-text-muted, #6B7280);
+    font-weight: 700;
+    padding: 0.85rem 0.25rem;
+}
+
+.pp-page__secondary-button:hover,
+.pp-page__skip-button:hover,
+.pp-page__secondary-button:focus,
+.pp-page__skip-button:focus {
+    color: var(--wuti-color-brand, #590D22);
+    text-decoration: underline;
+}
+
+@keyframes pp-field-enter {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 @media (max-width: 464px) {
     .pp-page__support-link {
       font-size: 0.688rem;

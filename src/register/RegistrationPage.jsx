@@ -26,7 +26,10 @@ import {
 } from './data/constants';
 import getBackendValidations from './data/selectors';
 import {
-  isFormValid, prepareRegistrationPayload,
+  getAdditionalRegistrationFieldSteps,
+  getVisibleRegistrationFieldDescriptions,
+  isFormValid,
+  prepareRegistrationPayload,
 } from './data/utils';
 import messages from './messages';
 import { EmailField, NameField, UsernameField } from './RegistrationFields';
@@ -51,6 +54,7 @@ import {
  */
 const RegistrationPage = (props) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [additionalFieldIndex, setAdditionalFieldIndex] = useState(0);
   const { formatMessage } = useIntl();
   const dispatch = useDispatch();
 
@@ -102,6 +106,11 @@ const RegistrationPage = (props) => {
   const buttonLabel = cta
     ? formatMessage(messages['create.account.cta.button'], { label: cta })
     : formatMessage(messages['create.account.for.free.button']);
+  const visibleFieldDescriptions = getVisibleRegistrationFieldDescriptions(fieldDescriptions, flags);
+  const additionalFieldSteps = getAdditionalRegistrationFieldSteps(fieldDescriptions, flags);
+  const hasAdditionalFields = additionalFieldSteps.length > 0;
+  const isLastAdditionalField = additionalFieldIndex >= additionalFieldSteps.length - 1;
+  const activeAdditionalField = additionalFieldSteps[additionalFieldIndex];
 
   /**
    * Set the userPipelineDetails data in formFields for only first time
@@ -225,7 +234,7 @@ const RegistrationPage = (props) => {
       payload,
       registrationEmbedded ? temporaryErrors : errors,
       configurableFormFields,
-      fieldDescriptions,
+      visibleFieldDescriptions,
       formatMessage,
     );
     setErrors({ ...fieldErrors });
@@ -269,11 +278,11 @@ const RegistrationPage = (props) => {
       });
     }
 
-    const { isValid, fieldErrors } = isFormValid(
+    const { fieldErrors } = isFormValid(
       step1Payload,
       registrationEmbedded ? temporaryErrors : errors,
       dummyConfigurable,
-      fieldDescriptions,
+      visibleFieldDescriptions,
       formatMessage,
     );
 
@@ -294,11 +303,65 @@ const RegistrationPage = (props) => {
       return;
     }
 
-    setCurrentStep(2);
+    if (hasAdditionalFields) {
+      setAdditionalFieldIndex(0);
+      setCurrentStep(2);
+      return;
+    }
+
+    registerUser();
+  };
+
+  const validateActiveAdditionalField = () => {
+    if (!activeAdditionalField) {
+      return true;
+    }
+
+    const fieldErrors = {};
+    const fieldValue = configurableFormFields[activeAdditionalField.name];
+    const requiredFieldError = activeAdditionalField.fieldData?.error_message
+      || formatMessage(messages['registration.empty.form.submission.error']);
+
+    if (activeAdditionalField.type === 'country') {
+      if (!configurableFormFields.country?.displayValue) {
+        fieldErrors.country = formatMessage(messages['empty.country.field.error']);
+      } else if (!configurableFormFields.country?.countryCode) {
+        fieldErrors.country = formatMessage(messages['invalid.country.field.error']);
+      }
+    } else if (activeAdditionalField.type === 'field') {
+      if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
+        fieldErrors[activeAdditionalField.name] = requiredFieldError;
+      } else if (activeAdditionalField.name === 'confirm_email' && fieldValue !== formFields.email) {
+        fieldErrors.confirm_email = formatMessage(messages['email.do.not.match']);
+      }
+    } else if (
+      ['honor_code', 'terms_of_service'].includes(activeAdditionalField.type)
+      && !fieldValue
+    ) {
+      fieldErrors[activeAdditionalField.name] = requiredFieldError;
+    }
+
+    if (Object.keys(fieldErrors).length) {
+      if (registrationEmbedded) {
+        setTemporaryErrors(prevErrors => ({ ...prevErrors, ...fieldErrors }));
+      } else {
+        setErrors(prevErrors => ({ ...prevErrors, ...fieldErrors }));
+      }
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (currentStep === 2 && !isLastAdditionalField) {
+      if (!validateActiveAdditionalField()) {
+        return;
+      }
+      setAdditionalFieldIndex(prevIndex => prevIndex + 1);
+      return;
+    }
     registerUser();
   };
 
@@ -317,6 +380,13 @@ const RegistrationPage = (props) => {
         />
       );
     }
+    let registerButtonLabel = buttonLabel;
+    if (currentStep === 1 && hasAdditionalFields) {
+      registerButtonLabel = formatMessage(messages['registration.continue.button']);
+    } else if (currentStep === 2 && !isLastAdditionalField) {
+      registerButtonLabel = formatMessage(messages['registration.additional.info.next']);
+    }
+
     return (
       <div className="w-full flex flex-col items-center py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans">
         <Helmet>
@@ -335,15 +405,15 @@ const RegistrationPage = (props) => {
           }
         />
 
-
-
         {autoSubmitRegForm && !errorCode.type ? (
           <div className="flex flex-col items-center justify-center min-h-[400px]">
             <svg className="animate-spin h-10 w-10 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            <p className="mt-4 text-neutral-500 font-medium tracking-wide animate-pulse">Configuration du compte...</p>
+            <p className="mt-4 text-neutral-500 font-medium tracking-wide animate-pulse">
+              {formatMessage(messages['registration.auto.submit.pending'])}
+            </p>
           </div>
         ) : (
           <div
@@ -380,10 +450,15 @@ const RegistrationPage = (props) => {
             <div className={classNames({ 'wuti-auth-card p-5 sm:p-6': !registrationEmbedded })}>
               {!registrationEmbedded && (
                 <div className="text-center mb-4">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight mb-1">Create an account</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight mb-1">
+                    {formatMessage(messages['register.page.heading'])}
+                  </h1>
                   <p className="text-sm text-neutral-500">
-                    Already have an account?{' '}
-                    <a href={`${getConfig().LMS_BASE_URL}/login`} className="wuti-link">Sign in</a>
+                    {formatMessage(messages['register.sign.in.prompt'])}
+                    {' '}
+                    <a href={`${getConfig().LMS_BASE_URL}/login`} className="wuti-link">
+                      {formatMessage(messages['register.sign.in.link'])}
+                    </a>
                   </p>
                 </div>
               )}
@@ -412,7 +487,7 @@ const RegistrationPage = (props) => {
                       errorMessage={errors.email}
                       helpText={[formatMessage(messages['help.text.email'])]}
                       floatingLabel={formatMessage(messages['registration.email.label'])}
-                      placeholder="prénom.nom@exemple.com"
+                      placeholder={formatMessage(messages['registration.email.placeholder'])}
                     />
                     {!flags.autoGeneratedUsernameEnabled && (
                       <UsernameField
@@ -446,14 +521,24 @@ const RegistrationPage = (props) => {
                     <div className="mb-6">
                       <button
                         type="button"
-                        onClick={() => setCurrentStep(1)}
+                        onClick={() => {
+                          if (additionalFieldIndex > 0) {
+                            setAdditionalFieldIndex(prevIndex => prevIndex - 1);
+                            return;
+                          }
+                          setCurrentStep(1);
+                        }}
                         className="group flex items-center wuti-link mb-4 text-sm"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 group-hover:-translate-x-1 transition-transform"><path d="m15 18-6-6 6-6" /></svg>
-                        Retour
+                        {formatMessage(messages['registration.back.button'])}
                       </button>
-                      <h3 className="text-xl font-bold text-neutral-900">Informations complémentaires</h3>
-                      <p className="text-sm text-neutral-500 mt-1 mb-6">Quelques détails pour finaliser votre inscription.</p>
+                      <h3 className="text-xl font-bold text-neutral-900">
+                        {formatMessage(messages['registration.additional.info.heading'])}
+                      </h3>
+                      <p className="text-sm text-neutral-500 mt-1 mb-6">
+                        {formatMessage(messages['registration.additional.info.description'])}
+                      </p>
                     </div>
 
                     <ConfigurableRegistrationForm
@@ -462,8 +547,10 @@ const RegistrationPage = (props) => {
                       formFields={configurableFormFields}
                       setFieldErrors={registrationEmbedded ? setTemporaryErrors : setErrors}
                       setFormFields={setConfigurableFormFields}
-                      autoSubmitRegisterForm={autoSubmitRegForm}
-                      fieldDescriptions={fieldDescriptions}
+                      autoSubmitRegistrationForm={autoSubmitRegForm}
+                      activeFieldIndex={additionalFieldIndex}
+                      fieldDescriptions={visibleFieldDescriptions}
+                      wizardMode
                     />
                   </div>
                 )}
@@ -481,9 +568,9 @@ const RegistrationPage = (props) => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      Traitement...
+                      {formatMessage(messages['registration.submit.pending'])}
                     </span>
-                  ) : (currentStep === 1 ? 'Continuer' : buttonLabel)}
+                  ) : registerButtonLabel}
                 </button>
 
                 {!registrationEmbedded && currentStep === 1 && (

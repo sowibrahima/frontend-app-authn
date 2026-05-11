@@ -6,6 +6,21 @@ const messages = defineMessages({
     defaultMessage: 'Register | {siteName}',
     description: 'register page title',
   },
+  'register.page.heading': {
+    id: 'register.page.heading',
+    defaultMessage: 'Create an account',
+    description: 'Heading on the registration page.',
+  },
+  'register.sign.in.prompt': {
+    id: 'register.sign.in.prompt',
+    defaultMessage: 'Already have an account?',
+    description: 'Prompt shown above the registration form before the sign in link.',
+  },
+  'register.sign.in.link': {
+    id: 'register.sign.in.link',
+    defaultMessage: 'Sign in',
+    description: 'Sign in link text on the registration page.',
+  },
   // Field labels
   'registration.fullname.label': {
     id: 'registration.fullname.label',
@@ -16,6 +31,11 @@ const messages = defineMessages({
     id: 'registration.email.label',
     defaultMessage: 'Email',
     description: 'Label that appears above email field on register page',
+  },
+  'registration.email.placeholder': {
+    id: 'registration.email.placeholder',
+    defaultMessage: 'first.last@example.com',
+    description: 'Placeholder for the registration email field.',
   },
   'registration.username.label': {
     id: 'registration.username.label',
@@ -31,6 +51,11 @@ const messages = defineMessages({
     id: 'registration.country.label',
     defaultMessage: 'Country/Region',
     description: 'Placeholder for the country options dropdown.',
+  },
+  'registration.country.placeholder': {
+    id: 'registration.country.placeholder',
+    defaultMessage: 'Select a country',
+    description: 'Placeholder option for the country dropdown.',
   },
   'registration.opt.in.label': {
     id: 'registration.opt.in.label',
@@ -68,6 +93,46 @@ const messages = defineMessages({
     id: 'create.account.cta.button',
     defaultMessage: '{label}',
     description: 'Label text for registration form submission button for those users who are landing through redirections',
+  },
+  'registration.continue.button': {
+    id: 'registration.continue.button',
+    defaultMessage: 'Continue',
+    description: 'Continue button text for the first registration step.',
+  },
+  'registration.submit.pending': {
+    id: 'registration.submit.pending',
+    defaultMessage: 'Processing...',
+    description: 'Registration submit button text while the request is pending.',
+  },
+  'registration.auto.submit.pending': {
+    id: 'registration.auto.submit.pending',
+    defaultMessage: 'Setting up your account...',
+    description: 'Message shown while an automatically submitted registration is pending.',
+  },
+  'registration.back.button': {
+    id: 'registration.back.button',
+    defaultMessage: 'Back',
+    description: 'Back button text for the registration form.',
+  },
+  'registration.additional.info.heading': {
+    id: 'registration.additional.info.heading',
+    defaultMessage: 'Additional information',
+    description: 'Heading for additional registration fields.',
+  },
+  'registration.additional.info.description': {
+    id: 'registration.additional.info.description',
+    defaultMessage: 'A few details to finish setting up your account.',
+    description: 'Description for additional registration fields.',
+  },
+  'registration.additional.info.progress': {
+    id: 'registration.additional.info.progress',
+    defaultMessage: 'Step {current} of {total}',
+    description: 'Progress label for the additional registration fields wizard.',
+  },
+  'registration.additional.info.next': {
+    id: 'registration.additional.info.next',
+    defaultMessage: 'Next detail',
+    description: 'Button text for advancing to the next additional registration field.',
   },
   // Institution login
   'register.institution.login.page.title': {
@@ -205,6 +270,11 @@ const messages = defineMessages({
     id: 'registration.username.suggestion.label',
     defaultMessage: 'Suggested:',
     description: 'Suggested usernames label text.',
+  },
+  'registration.username.suggestion.close': {
+    id: 'registration.username.suggestion.close',
+    defaultMessage: 'Close username suggestions',
+    description: 'Accessible label for the button that clears username suggestions.',
   },
   'did.you.mean.alert.text': {
     id: 'did.you.mean.alert.text',

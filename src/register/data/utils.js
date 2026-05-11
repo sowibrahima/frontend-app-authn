@@ -20,6 +20,71 @@ export const validatePasswordField = (value, formatMessage) => {
   return fieldError;
 };
 
+export const getVisibleRegistrationFieldDescriptions = (fieldDescriptions = {}, flags = {}) => {
+  if (!flags.showConfigurableRegistrationFields) {
+    return {};
+  }
+
+  return Object.keys(fieldDescriptions).reduce((visibleFields, fieldName) => {
+    const fieldData = fieldDescriptions[fieldName];
+    if (!fieldData?.name) {
+      return visibleFields;
+    }
+
+    return {
+      ...visibleFields,
+      [fieldName]: fieldData,
+    };
+  }, {});
+};
+
+export const getAdditionalRegistrationFieldSteps = (fieldDescriptions = {}, flags = {}) => {
+  const visibleFieldDescriptions = getVisibleRegistrationFieldDescriptions(fieldDescriptions, flags);
+  const steps = [];
+  let showCountryField = false;
+  let showTermsOfServiceAndHonorCode = false;
+
+  Object.keys(visibleFieldDescriptions).forEach(fieldName => {
+    const fieldData = visibleFieldDescriptions[fieldName];
+
+    switch (fieldData.name) {
+      case 'country':
+        showCountryField = true;
+        break;
+      case 'honor_code':
+        if (fieldData.type === 'tos_and_honor_code') {
+          showTermsOfServiceAndHonorCode = true;
+        } else {
+          steps.push({ name: fieldData.name, type: 'honor_code', fieldData });
+        }
+        break;
+      case 'terms_of_service':
+        steps.push({ name: fieldData.name, type: 'terms_of_service', fieldData });
+        break;
+      default:
+        steps.push({ name: fieldData.name, type: 'field', fieldData });
+    }
+  });
+
+  if (flags.showConfigurableEdxFields || showCountryField) {
+    steps.push({ name: 'country', type: 'country' });
+  }
+
+  if (flags.showMarketingEmailOptInCheckbox) {
+    steps.push({ name: 'marketingEmailsOptIn', type: 'marketing_email_opt_in' });
+  }
+
+  if (flags.showConfigurableEdxFields || showTermsOfServiceAndHonorCode) {
+    steps.push({ name: 'honor_code', type: 'tos_and_honor_code' });
+  }
+
+  return steps;
+};
+
+export const hasAdditionalRegistrationFields = (fieldDescriptions = {}, flags = {}) => (
+  getAdditionalRegistrationFieldSteps(fieldDescriptions, flags).length > 0
+);
+
 /**
  * It accepts complete registration data as payload and checks if the form is valid.
  * @param payload

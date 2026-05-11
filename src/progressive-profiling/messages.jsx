@@ -31,6 +31,21 @@ const messages = defineMessages({
     defaultMessage: 'Next',
     description: 'Next button text',
   },
+  'optional.fields.next.question.button': {
+    id: 'optional.fields.next.question.button',
+    defaultMessage: 'Next question',
+    description: 'Button text to advance to the next progressive profiling field',
+  },
+  'optional.fields.previous.question.button': {
+    id: 'optional.fields.previous.question.button',
+    defaultMessage: 'Previous question',
+    description: 'Button text to return to the previous progressive profiling field',
+  },
+  'optional.fields.progress.label': {
+    id: 'optional.fields.progress.label',
+    defaultMessage: 'Question {current} of {total}',
+    description: 'Progress label for the progressive profiling field wizard',
+  },
   // modal dialog box
   'continue.to.platform': {
     id: 'continue.to.platform',

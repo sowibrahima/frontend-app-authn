@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 
 import { FormFieldRenderer } from '../../field-renderer';
 import { FIELDS } from '../data/constants';
+import { getAdditionalRegistrationFieldSteps } from '../data/utils';
 import messages from '../messages';
 import { CountryField, HonorCode, TermsOfService } from '../RegistrationFields';
 
@@ -31,6 +32,8 @@ const ConfigurableRegistrationForm = (props) => {
     setFieldErrors,
     setFormFields,
     autoSubmitRegistrationForm,
+    activeFieldIndex,
+    wizardMode,
   } = props;
 
   /** The reason for adding the entry 'United States' is that Chrome browser aut-fill the form with the 'Unites
@@ -39,16 +42,12 @@ const ConfigurableRegistrationForm = (props) => {
  */
   const countryList = useMemo(() => getCountryList(getLocale()).concat([{ code: 'US', name: 'United States' }]), []);
 
-  let showTermsOfServiceAndHonorCode = false;
-  let showCountryField = false;
-
-  const formFieldDescriptions = [];
-  const honorCode = [];
   const flags = {
     showConfigurableRegistrationFields: getConfig().ENABLE_DYNAMIC_REGISTRATION_FIELDS,
     showConfigurableEdxFields: getConfig().SHOW_CONFIGURABLE_EDX_FIELDS,
     showMarketingEmailOptInCheckbox: getConfig().MARKETING_EMAILS_OPT_IN,
   };
+  const fieldSteps = getAdditionalRegistrationFieldSteps(fieldDescriptions, flags);
 
   /**
    * If auto submitting register form, we will check tos and honor code fields if they exist for feature parity.
@@ -109,112 +108,124 @@ const ConfigurableRegistrationForm = (props) => {
     setFieldErrors(prevErrors => ({ ...prevErrors, [name]: '' }));
   };
 
-  if (flags.showConfigurableRegistrationFields) {
-    Object.keys(fieldDescriptions).forEach(fieldName => {
-      const fieldData = fieldDescriptions[fieldName];
-      switch (fieldData.name) {
-        case FIELDS.COUNTRY:
-          showCountryField = true;
-          break;
-        case FIELDS.HONOR_CODE:
-          if (fieldData.type === 'tos_and_honor_code') {
-            showTermsOfServiceAndHonorCode = true;
-          } else {
-            honorCode.push(
-              <span key={fieldData.name}>
-                <HonorCode
-                  fieldType={fieldData.type}
-                  value={formFields[fieldData.name]}
-                  onChangeHandler={handleOnChange}
-                  errorMessage={fieldErrors[fieldData.name]}
-                />
-              </span>,
-            );
-          }
-          break;
-        case FIELDS.TERMS_OF_SERVICE:
-          honorCode.push(
-            <span key={fieldData.name}>
-              <TermsOfService
-                value={formFields[fieldData.name]}
-                onChangeHandler={handleOnChange}
-                errorMessage={fieldErrors[fieldData.name]}
-              />
-            </span>,
-          );
-          break;
-        default:
-          formFieldDescriptions.push(
-            <span key={fieldData.name}>
-              <FormFieldRenderer
-                fieldData={fieldData}
-                value={formFields[fieldData.name]}
-                onChangeHandler={handleOnChange}
-                handleBlur={handleOnBlur}
-                handleFocus={handleOnFocus}
-                errorMessage={fieldErrors[fieldData.name]}
-                isRequired
-              />
-            </span>,
-          );
-      }
-    });
-  }
+  const renderFieldStep = (fieldStep) => {
+    if (!fieldStep) {
+      return null;
+    }
 
-  if (flags.showConfigurableEdxFields || showCountryField) {
-    formFieldDescriptions.push(
-      <span key="country">
-        <CountryField
-          countryList={countryList}
-          selectedCountry={formFields.country}
-          errorMessage={fieldErrors.country || ''}
-          onChangeHandler={handleOnChange}
-          handleErrorChange={handleErrorChange}
-          onBlurHandler={handleOnBlur}
-          onFocusHandler={handleOnFocus}
-        />
-      </span>,
-    );
-  }
+    switch (fieldStep.type) {
+      case 'country':
+        return (
+          <span key="country">
+            <CountryField
+              countryList={countryList}
+              selectedCountry={formFields.country}
+              errorMessage={fieldErrors.country || ''}
+              onChangeHandler={handleOnChange}
+              handleErrorChange={handleErrorChange}
+              onBlurHandler={handleOnBlur}
+              onFocusHandler={handleOnFocus}
+            />
+          </span>
+        );
+      case 'marketing_email_opt_in':
+        return (
+          <span key="marketing_email_opt_in">
+            <FormFieldRenderer
+              fieldData={{
+                type: 'checkbox',
+                label: formatMessage(messages['registration.opt.in.label'], { siteName: getConfig().SITE_NAME }),
+                name: 'marketingEmailsOptIn',
+              }}
+              value={formFields.marketingEmailsOptIn}
+              className="form-field--checkbox"
+              onChangeHandler={handleOnChange}
+              handleBlur={handleOnBlur}
+              handleFocus={handleOnFocus}
+            />
+          </span>
+        );
+      case 'tos_and_honor_code':
+        return (
+          <span key="honor_code">
+            <HonorCode fieldType="tos_and_honor_code" onChangeHandler={handleOnChange} value={formFields.honor_code} />
+          </span>
+        );
+      case 'honor_code':
+        return (
+          <span key={fieldStep.name}>
+            <HonorCode
+              fieldType={fieldStep.fieldData.type}
+              value={formFields[fieldStep.name]}
+              onChangeHandler={handleOnChange}
+              errorMessage={fieldErrors[fieldStep.name]}
+            />
+          </span>
+        );
+      case 'terms_of_service':
+        return (
+          <span key={fieldStep.name}>
+            <TermsOfService
+              value={formFields[fieldStep.name]}
+              onChangeHandler={handleOnChange}
+              errorMessage={fieldErrors[fieldStep.name]}
+            />
+          </span>
+        );
+      default:
+        return (
+          <span key={fieldStep.name}>
+            <FormFieldRenderer
+              fieldData={fieldStep.fieldData}
+              value={formFields[fieldStep.name]}
+              onChangeHandler={handleOnChange}
+              handleBlur={handleOnBlur}
+              handleFocus={handleOnFocus}
+              errorMessage={fieldErrors[fieldStep.name]}
+              isRequired
+            />
+          </span>
+        );
+    }
+  };
 
-  if (flags.showMarketingEmailOptInCheckbox) {
-    formFieldDescriptions.push(
-      <span key="marketing_email_opt_in">
-        <FormFieldRenderer
-          fieldData={{
-            type: 'checkbox',
-            label: formatMessage(messages['registration.opt.in.label'], { siteName: getConfig().SITE_NAME }),
-            name: 'marketingEmailsOptIn',
-          }}
-          value={formFields.marketingEmailsOptIn}
-          className="form-field--checkbox"
-          onChangeHandler={handleOnChange}
-          handleBlur={handleOnBlur}
-          handleFocus={handleOnFocus}
-        />
-      </span>,
-    );
-  }
+  if (wizardMode) {
+    const boundedFieldIndex = Math.min(activeFieldIndex, fieldSteps.length - 1);
+    const activeFieldStep = fieldSteps[boundedFieldIndex];
+    const progressPercent = fieldSteps.length ? ((boundedFieldIndex + 1) / fieldSteps.length) * 100 : 0;
 
-  if (flags.showConfigurableEdxFields || showTermsOfServiceAndHonorCode) {
-    formFieldDescriptions.push(
-      <span key="honor_code">
-        <HonorCode fieldType="tos_and_honor_code" onChangeHandler={handleOnChange} value={formFields.honor_code} />
-      </span>,
+    return (
+      <div className="wuti-extra-fields-wizard">
+        <div className="wuti-extra-fields-progress" aria-hidden="true">
+          <div className="wuti-extra-fields-progress__track">
+            <div
+              className="wuti-extra-fields-progress__bar"
+              style={{ transform: `scaleX(${progressPercent / 100})` }}
+            />
+          </div>
+          <span className="wuti-extra-fields-progress__count">
+            {formatMessage(messages['registration.additional.info.progress'], {
+              current: boundedFieldIndex + 1,
+              total: fieldSteps.length,
+            })}
+          </span>
+        </div>
+        <div className="wuti-extra-fields-step" key={activeFieldStep?.name}>
+          {renderFieldStep(activeFieldStep)}
+        </div>
+      </div>
     );
   }
 
   return (
     <>
-      {formFieldDescriptions}
-      <div>
-        {honorCode}
-      </div>
+      {fieldSteps.map(renderFieldStep)}
     </>
   );
 };
 
 ConfigurableRegistrationForm.propTypes = {
+  activeFieldIndex: PropTypes.number,
   email: PropTypes.string.isRequired,
   fieldDescriptions: PropTypes.shape({}),
   fieldErrors: PropTypes.shape({
@@ -231,11 +242,14 @@ ConfigurableRegistrationForm.propTypes = {
   setFieldErrors: PropTypes.func.isRequired,
   setFormFields: PropTypes.func.isRequired,
   autoSubmitRegistrationForm: PropTypes.bool,
+  wizardMode: PropTypes.bool,
 };
 
 ConfigurableRegistrationForm.defaultProps = {
+  activeFieldIndex: 0,
   fieldDescriptions: {},
   autoSubmitRegistrationForm: false,
+  wizardMode: false,
 };
 
 export default ConfigurableRegistrationForm;
