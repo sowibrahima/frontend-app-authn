@@ -27,6 +27,11 @@ const messages = defineMessages({
     defaultMessage: 'Full name',
     description: 'Label that appears above fullname field',
   },
+  'registration.fullname.placeholder': {
+    id: 'registration.fullname.placeholder',
+    defaultMessage: 'e.g. Jane Doe',
+    description: 'Placeholder for the registration full name field.',
+  },
   'registration.email.label': {
     id: 'registration.email.label',
     defaultMessage: 'Email',
@@ -41,6 +46,11 @@ const messages = defineMessages({
     id: 'registration.username.label',
     defaultMessage: 'Public username',
     description: 'Label that appears above username field',
+  },
+  'registration.username.placeholder': {
+    id: 'registration.username.placeholder',
+    defaultMessage: 'jdoe123',
+    description: 'Placeholder for the registration username field.',
   },
   'registration.password.label': {
     id: 'registration.password.label',
