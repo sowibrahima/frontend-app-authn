@@ -476,7 +476,7 @@ const RegistrationPage = (props) => {
                       errorMessage={errors.name}
                       helpText={[formatMessage(messages['help.text.name'])]}
                       floatingLabel={formatMessage(messages['registration.fullname.label'])}
-                      placeholder="e.g. Jane Doe"
+                      placeholder={formatMessage(messages['registration.fullname.placeholder'])}
                     />
                     <EmailField
                       name="email"
@@ -499,7 +499,7 @@ const RegistrationPage = (props) => {
                         errorMessage={errors.username}
                         helpText={[formatMessage(messages['help.text.username.1']), formatMessage(messages['help.text.username.2'])]}
                         floatingLabel={formatMessage(messages['registration.username.label'])}
-                        placeholder="jdoe123"
+                        placeholder={formatMessage(messages['registration.username.placeholder'])}
                       />
                     )}
                     {!currentProvider && (
