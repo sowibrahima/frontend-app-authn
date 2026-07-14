@@ -5,6 +5,7 @@ import validateName from './validator';
 import { FormGroup } from '../../../common-components';
 import { useRegisterContext } from '../../components/RegisterContext';
 import { useFieldValidations } from '../../data/apiHook';
+
 /**
  * Name field wrapper. It accepts following handlers
  * - handleChange for setting value change and
@@ -33,6 +34,7 @@ const NameField = (props) => {
       setValidationsFailure();
     },
   });
+
   const {
     handleErrorChange,
     shouldFetchUsernameSuggestions,

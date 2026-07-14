@@ -7,6 +7,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import {
   EmbeddedRegistrationRoute, NotFoundPage, registerIcons, UnAuthOnlyRoute, Zendesk,
 } from './common-components';
+import configureStore from './data/configureStore';
 import {
   AUTHN_PROGRESSIVE_PROFILING,
   LOGIN_PAGE,
@@ -40,7 +41,7 @@ const queryClient = new QueryClient({
 
 const MainApp = () => (
   <QueryClientProvider client={queryClient}>
-    <AppProvider>
+    <AppProvider store={configureStore()}>
       <Helmet>
         <link rel="shortcut icon" href={getConfig().FAVICON_URL} type="image/x-icon" />
       </Helmet>

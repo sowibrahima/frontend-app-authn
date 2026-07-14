@@ -118,6 +118,16 @@ function stripWutiskillParagonTheme(config) {
     '@openedx/frontend-build/lib/plugins/paragon-webpack-plugin/ParagonWebpackPlugin',
   );
 
+  config.resolve = config.resolve || {};
+  config.resolve.alias = {
+    ...(config.resolve.alias || {}),
+    'react$': appRequire.resolve('react'),
+    'react/jsx-runtime$': appRequire.resolve('react/jsx-runtime'),
+    'react/jsx-dev-runtime$': appRequire.resolve('react/jsx-dev-runtime'),
+    'react-dom$': appRequire.resolve('react-dom'),
+    '@edx/frontend-platform': path.dirname(appRequire.resolve('@edx/frontend-platform')),
+  };
+
   if (config.entry && typeof config.entry === 'object' && !Array.isArray(config.entry)) {
     Object.keys(config.entry).forEach((key) => {
       if (key.startsWith('paragon.theme') || key.startsWith('brand.theme')) {

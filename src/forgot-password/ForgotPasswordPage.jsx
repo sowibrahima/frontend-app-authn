@@ -113,7 +113,7 @@ const ForgotPasswordPage = (props) => {
             <h2 className="text-3xl font-bold text-neutral-900 tracking-tight mb-3">
               {formatMessage(messages['forgot.password.page.heading'])}
             </h2>
-            <p className="text-neutral-500 text-sm leading-relaxed max-w-[280px] mx-auto">
+            <p className="text-neutral-500 text-sm leading-relaxed max-w-[440px] mx-auto">
               {formatMessage(messages['forgot.password.page.instructions'])}
             </p>
           </div>
